@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>Grocery Cart Calculator</title>
+<style>
+  :root{
+    --bg:#fdf8f2;
+    --ink:#1c1c1c;
+    --ink-soft:#726a5e;
+    --line:#e0d6c4;
+    --accent:#1f7a5c;
+    --accent-soft:#d3ede1;
+    --warn:#d1481f;
+    --warn-soft:#fce1d3;
+    --tab-active-bg:#1f7a5c;
+    --header-bg:#2a3d36;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{width:100%;overflow-x:hidden;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:Calibri, Arial, Helvetica, sans-serif;
+    min-height:100vh;
+    width:100%;
+    overflow-x:hidden;
+    padding-bottom:150px;
+  }
+  .wrap{width:100%;max-width:480px;margin:0 auto;padding:20px 16px 0;}
+
+  h1{
+    font-size:20px;
+    font-weight:700;
+    margin:0 0 16px;
+    letter-spacing:.01em;
+    color:var(--accent);
+  }
+
+  /* Tabs */
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:18px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:9px 2px;
+    cursor:pointer;
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--ink-soft);
+    background:#fff;
+  }
+  .tab .name{font-size:12.5px;font-weight:700;}
+  .tab .rate{font-size:10.5px;margin-top:1px;}
+  .tab.active{
+    color:#fff;
+    background:var(--tab-active-bg);
+    border-color:var(--tab-active-bg);
+  }
+  .tab.active .rate{color:#d3ede1;}
+
+  /* Add form */
+  .add-card{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:20px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .row{display:flex;gap:8px;margin-bottom:10px;}
+  input[type=text], input[type=number]{
+    font-family:inherit;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:9px 10px;
+    font-size:16px;
+    color:var(--ink);
+    width:100%;
+  }
+  input:focus{outline:none;border-color:var(--accent);}
+  input::placeholder{color:#b8b8b8;}
+  .f-name{flex:1.7;}
+  .f-price{flex:1;}
+  .autocomplete-wrap{position:relative;flex:1.7;}
+  .autocomplete-wrap .f-name{flex:none;width:100%;}
+  .suggestions{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    margin-top:3px;
+    max-height:170px;
+    overflow-y:auto;
+    z-index:20;
+    box-shadow:0 4px 12px rgba(0,0,0,.1);
+    display:none;
+  }
+  .suggestion-item{
+    padding:8px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .suggestion-item:active{background:var(--accent-soft);}
+  .suggestion-item + .suggestion-item{border-top:1px solid var(--line);}
+  .suggestion-price{color:var(--ink-soft);flex-shrink:0;}
+
+  .stepper{
+    display:flex;
+    align-items:center;
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .step-btn{
+    background:#fafafa;
+    border:none;
+    width:30px;
+    height:34px;
+    font-size:16px;
+    color:var(--ink);
+    cursor:pointer;
+    line-height:1;
+  }
+  .step-btn:active{background:var(--line);}
+  .step-val{
+    min-width:26px;
+    text-align:center;
+    font-size:14px;
+    font-weight:600;
+  }
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .toggle-label{font-size:13px;color:var(--ink-soft);}
+  .switch{
+    position:relative;
+    width:38px;
+    height:22px;
+    border-radius:11px;
+    background:var(--accent-soft);
+    border:1px solid var(--line);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .switch.on{background:var(--warn-soft);border-color:var(--warn);}
+  .switch .knob{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    transition:left .15s ease, background .15s ease;
+  }
+  .switch.on .knob{left:18px;background:var(--warn);}
+
+  .add-btn{
+    width:100%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:11px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .add-btn:active{background:#175f47;}
+
+  .list-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin:0 0 8px 2px;
+  }
+  .list-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .clear-btn{
+    background:none;
+    border:none;
+    color:var(--warn);
+    font-family:inherit;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    padding:2px 0;
+  }
+  .clear-btn:active{opacity:.7;}
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(28,28,28,.5);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:24px;
+  }
+  .modal-box{
+    background:#fff;
+    border-radius:10px;
+    padding:20px;
+    max-width:340px;
+    width:100%;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+  }
+  .modal-title{
+    font-size:16px;
+    font-weight:700;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .modal-text{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin:0 0 18px;
+    line-height:1.4;
+  }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+  }
+  .modal-cancel, .modal-confirm{
+    flex:1;
+    border:none;
+    border-radius:6px;
+    padding:10px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .modal-cancel{background:#f1ede5;color:var(--ink);}
+  .modal-cancel:active{background:var(--line);}
+  .modal-confirm{background:var(--warn);color:#fff;}
+  .modal-confirm:active{background:#a83a18;}
+  .empty{
+    text-align:center;
+    padding:24px 10px;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+
+  .item{
+    position:relative;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:8px;
+    padding:10px 12px;
+    transition:transform .15s ease;
+    touch-action:pan-y;
+  }
+  .item-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .item-name{
+    flex:1;
+    font-size:14px;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .item-total{
+    font-size:14px;
+    font-weight:600;
+    width:60px;
+    text-align:right;
+  }
+  .del-btn{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:17px;
+    cursor:pointer;
+    padding:0 0 0 4px;
+    line-height:1;
+  }
+  .del-btn:active{color:var(--warn);}
+
+  .item-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .item-price-each{font-size:12px;color:var(--ink-soft);}
+
+  .item-controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .mini-switch{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    cursor:pointer;
+  }
+  .mini-switch .switch{width:32px;height:18px;border-radius:9px;}
+  .mini-switch .switch .knob{width:12px;height:12px;top:2px;left:2px;}
+  .mini-switch .switch.on .knob{left:16px;}
+  .mini-switch-label{
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .mini-switch.on .mini-switch-label{color:var(--warn);}
+
+  .mini-stepper{
+    display:flex;
+    align-items:center;
+    border:1px solid var(--line);
+    border-radius:5px;
+  }
+  .mini-stepper .step-btn{
+    width:24px;
+    height:26px;
+    font-size:13px;
+  }
+  .mini-stepper .step-val{
+    min-width:20px;
+    font-size:13px;
+  }
+
+  /* Sticky summary */
+  .summary{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:var(--header-bg);
+    color:#fff;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    box-shadow:0 -2px 10px rgba(0,0,0,.15);
+  }
+  .summary-inner{max-width:480px;margin:0 auto;}
+  .sum-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:#a9c2b8;
+    margin-bottom:2px;
+  }
+  .sum-row span:last-child{color:#ffffff;font-variant-numeric:tabular-nums;}
+  .sum-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-top:6px;
+    padding-top:6px;
+    border-top:1px solid rgba(255,255,255,.25);
+  }
+  .sum-total .label{font-size:13px;color:#fff;}
+  .sum-total .value{
+    font-size:22px;
+    font-weight:700;
+    color:#fff;
+    font-variant-numeric:tabular-nums;
+  }
+  .status-note{
+    font-size:10px;
+    color:#888;
+    margin-top:2px;
+  }
+  .save-note{
+    font-size:10px;
+    color:#666;
+    text-align:center;
+    margin:4px 0 2px;
+    min-height:12px;
+  }
+
+  .undo-toast{
+    position:fixed;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:9px 10px 9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    display:none;
+    align-items:center;
+    gap:12px;
+    z-index:50;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+    max-width:90vw;
+  }
+  .undo-toast button{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    padding:5px 12px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:12px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  .item-wrap{
+    position:relative;
+    margin-bottom:8px;
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .item-delete-bg{
+    position:absolute;
+    inset:0;
+    background:var(--warn);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    padding-right:22px;
+    font-weight:700;
+    font-size:13px;
+    border-radius:8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Grocery Cart Calculator</h1>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-vallejo" onclick="switchTab('vallejo')">
+      <div class="name">Vallejo</div>
+      <div class="rate">9.25%</div>
+    </div>
+    <div class="tab" id="tab-ac" onclick="switchTab('ac')">
+      <div class="name">American Canyon</div>
+      <div class="rate">7.75%</div>
+    </div>
+    <div class="tab" id="tab-other" onclick="switchTab('other')">
+      <div class="name">Other</div>
+      <div class="rate">~8.75% est.</div>
+    </div>
+  </div>
+
+  <div class="add-card">
+    <div class="row">
+      <div class="autocomplete-wrap">
+        <input type="text" id="in-name" class="f-name" placeholder="Item name" autocomplete="off">
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+      <input type="number" id="in-price" class="f-price" placeholder="Price" inputmode="decimal" step="0.01" min="0">
+    </div>
+    <div class="row" style="justify-content:space-between;align-items:center;">
+      <span class="toggle-label">Quantity</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="adjustDraftQty(-1)">-</button>
+        <div class="step-val" id="draft-qty">1</div>
+        <button class="step-btn" onclick="adjustDraftQty(1)">+</button>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label" id="draft-tax-label">Tax exempt (grocery)</span>
+      <div class="switch" id="draft-switch" onclick="toggleDraftTax()"><div class="knob"></div></div>
+    </div>
+    <button class="add-btn" onclick="addItem()">Add to cart</button>
+  </div>
+
+  <div class="list-header">
+    <p class="list-label">In your cart</p>
+    <button class="clear-btn" onclick="requestClearCart()">Clear Cart</button>
+  </div>
+  <div id="item-list"></div>
+  <div class="save-note" id="save-note"></div>
+</div>
+
+<div class="modal-overlay" id="clear-modal">
+  <div class="modal-box">
+    <p class="modal-title">Clear cart?</p>
+    <p class="modal-text">This removes every item in the <span id="clear-modal-loc">Vallejo</span> cart. This can't be undone.</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeClearModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmClearCart()">Clear Cart</button>
+    </div>
+  </div>
+</div>
+
+<div class="undo-toast" id="undo-toast">
+  <span id="undo-text"></span>
+  <button onclick="performUndo()">Undo</button>
+</div>
+
+<div class="summary">
+  <div class="summary-inner">
+    <div class="sum-row"><span>Exempt subtotal</span><span id="sum-exempt">$0.00</span></div>
+    <div class="sum-row"><span>Taxable subtotal</span><span id="sum-taxable">$0.00</span></div>
+    <div class="sum-row"><span id="sum-tax-label">Tax</span><span id="sum-tax">$0.00</span></div>
+    <div class="sum-total">
+      <span class="label">Estimated Total</span>
+      <span class="value" id="sum-total">$0.00</span>
+    </div>
+    <div class="status-note" id="loc-note">Vallejo transaction</div>
+  </div>
+</div>
+
+<script>
+const RATES = { vallejo: 0.0925, ac: 0.0775, other: 0.0875 };
+const NAMES = { vallejo: 'Vallejo', ac: 'American Canyon', other: 'Other location' };
+const STORAGE_KEYS = { vallejo: 'cart:vallejo', ac: 'cart:ac', other: 'cart:other' };
+
+let carts = { vallejo: [], ac: [], other: [] };
+let currentTab = 'vallejo';
+let nextId = 1;
+let draftQty = 1;
+let draftTaxable = false;
+let knownItems = [];
+let currentMatches = [];
+let undoSnapshot = null;
+let undoTimeout = null;
+const KNOWN_ITEMS_KEY = 'known-items';
+
+async function loadCart(tab){
+  try{
+    const res = await window.storage.get(STORAGE_KEYS[tab], false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      carts[tab] = parsed.items || [];
+      nextId = Math.max(nextId, (parsed.nextId || 1));
+    }
+  }catch(e){
+    // no saved cart yet for this tab, start empty
+    carts[tab] = [];
+  }
+}
+
+async function saveCart(tab){
+  const noteEl = document.getElementById('save-note');
+  try{
+    await window.storage.set(STORAGE_KEYS[tab], JSON.stringify({ items: carts[tab], nextId }), false);
+    if(noteEl) noteEl.textContent = 'Saved';
+    setTimeout(() => { if(noteEl) noteEl.textContent=''; }, 1000);
+  }catch(e){
+    if(noteEl) noteEl.textContent = 'Could not save — changes may not persist';
+  }
+}
+
+async function loadKnownItems(){
+  try{
+    const res = await window.storage.get(KNOWN_ITEMS_KEY, false);
+    if(res && res.value) knownItems = JSON.parse(res.value);
+  }catch(e){
+    knownItems = [];
+  }
+}
+
+async function saveKnownItems(){
+  try{
+    await window.storage.set(KNOWN_ITEMS_KEY, JSON.stringify(knownItems), false);
+  }catch(e){
+    // non-critical, autocomplete just won't have this item next time
+  }
+}
+
+function upsertKnownItem(name, price, taxable){
+  const idx = knownItems.findIndex(k => k.name.toLowerCase() === name.toLowerCase());
+  const entry = { name, price, taxable };
+  if(idx >= 0){ knownItems[idx] = entry; }
+  else { knownItems.unshift(entry); }
+  knownItems = knownItems.slice(0, 60);
+  saveKnownItems();
+}
+
+async function init(){
+  document.getElementById('save-note').textContent = 'Loading...';
+  await Promise.all([loadCart('vallejo'), loadCart('ac'), loadCart('other'), loadKnownItems()]);
+  document.getElementById('save-note').textContent = '';
+  render();
+}
+
+function switchTab(tab){
+  currentTab = tab;
+  document.getElementById('tab-vallejo').classList.toggle('active', tab==='vallejo');
+  document.getElementById('tab-ac').classList.toggle('active', tab==='ac');
+  document.getElementById('tab-other').classList.toggle('active', tab==='other');
+  render();
+}
+
+function showSuggestions(query){
+  const box = document.getElementById('suggestions');
+  const q = query.trim().toLowerCase();
+  if(!q){
+    box.style.display = 'none';
+    box.innerHTML = '';
+    currentMatches = [];
+    return;
+  }
+  currentMatches = knownItems.filter(k => k.name.toLowerCase().includes(q)).slice(0, 5);
+  if(currentMatches.length === 0){
+    box.style.display = 'none';
+    box.innerHTML = '';
+    return;
+  }
+  box.innerHTML = currentMatches.map((k, i) =>
+    `<div class="suggestion-item" onmousedown="selectSuggestion(${i})">
+       <span>${escapeHtml(k.name)}</span>
+       <span class="suggestion-price">${fmt(k.price)}${k.taxable ? ' · taxable' : ''}</span>
+     </div>`
+  ).join('');
+  box.style.display = 'block';
+}
+
+function selectSuggestion(i){
+  const k = currentMatches[i];
+  if(!k) return;
+  document.getElementById('in-name').value = k.name;
+  document.getElementById('in-price').value = k.price.toFixed(2);
+  draftTaxable = k.taxable;
+  document.getElementById('draft-switch').classList.toggle('on', draftTaxable);
+  document.getElementById('draft-tax-label').textContent = draftTaxable ? 'Taxable item' : 'Tax exempt (grocery)';
+  document.getElementById('suggestions').style.display = 'none';
+  document.getElementById('in-price').focus();
+}
+
+function hideSuggestionsDelayed(){
+  setTimeout(() => { document.getElementById('suggestions').style.display = 'none'; }, 120);
+}
+
+function adjustDraftQty(delta){
+  draftQty += delta;
+  if(draftQty < 1) draftQty = 1;
+  document.getElementById('draft-qty').textContent = draftQty;
+}
+
+function toggleDraftTax(){
+  draftTaxable = !draftTaxable;
+  const sw = document.getElementById('draft-switch');
+  const label = document.getElementById('draft-tax-label');
+  sw.classList.toggle('on', draftTaxable);
+  label.textContent = draftTaxable ? 'Taxable item' : 'Tax exempt (grocery)';
+}
+
+function pushUndoSnapshot(tab, label){
+  undoSnapshot = { tab, cart: JSON.parse(JSON.stringify(carts[tab])) };
+  const toast = document.getElementById('undo-toast');
+  document.getElementById('undo-text').textContent = label;
+  toast.style.display = 'flex';
+  clearTimeout(undoTimeout);
+  undoTimeout = setTimeout(() => {
+    toast.style.display = 'none';
+    undoSnapshot = null;
+  }, 5000);
+}
+
+function performUndo(){
+  if(!undoSnapshot) return;
+  carts[undoSnapshot.tab] = undoSnapshot.cart;
+  if(currentTab === undoSnapshot.tab) render();
+  saveCart(undoSnapshot.tab);
+  document.getElementById('undo-toast').style.display = 'none';
+  clearTimeout(undoTimeout);
+  undoSnapshot = null;
+}
+
+function requestClearCart(){
+  if(carts[currentTab].length === 0) return;
+  document.getElementById('clear-modal-loc').textContent = NAMES[currentTab];
+  document.getElementById('clear-modal').style.display = 'flex';
+}
+
+function closeClearModal(){
+  document.getElementById('clear-modal').style.display = 'none';
+}
+
+function confirmClearCart(){
+  pushUndoSnapshot(currentTab, 'Cart cleared');
+  carts[currentTab] = [];
+  render();
+  saveCart(currentTab);
+  closeClearModal();
+}
+
+function addItem(){
+  const nameEl = document.getElementById('in-name');
+  const priceEl = document.getElementById('in-price');
+
+  const name = nameEl.value.trim();
+  const price = parseFloat(priceEl.value);
+
+  if(!name){ nameEl.focus(); return; }
+  if(isNaN(price) || price < 0){ priceEl.focus(); return; }
+
+  pushUndoSnapshot(currentTab, 'Item added');
+
+  carts[currentTab].push({
+    id: nextId++,
+    name,
+    price,
+    qty: draftQty,
+    taxable: draftTaxable
+  });
+
+  upsertKnownItem(name, price, draftTaxable);
+
+  nameEl.value = '';
+  priceEl.value = '';
+  draftQty = 1;
+  draftTaxable = false;
+  document.getElementById('draft-qty').textContent = '1';
+  document.getElementById('draft-switch').classList.remove('on');
+  document.getElementById('draft-tax-label').textContent = 'Tax exempt (grocery)';
+  nameEl.focus();
+
+  render();
+  saveCart(currentTab);
+}
+
+function changeQty(id, delta){
+  const item = carts[currentTab].find(i => i.id === id);
+  if(!item) return;
+  pushUndoSnapshot(currentTab, 'Quantity changed');
+  item.qty += delta;
+  if(item.qty < 1) item.qty = 1;
+  render();
+  saveCart(currentTab);
+}
+
+function toggleItemTax(id){
+  const item = carts[currentTab].find(i => i.id === id);
+  if(!item) return;
+  pushUndoSnapshot(currentTab, 'Tax status changed');
+  item.taxable = !item.taxable;
+  render();
+  saveCart(currentTab);
+}
+
+function deleteItem(id){
+  pushUndoSnapshot(currentTab, 'Item removed');
+  carts[currentTab] = carts[currentTab].filter(i => i.id !== id);
+  render();
+  saveCart(currentTab);
+}
+
+function fmt(n){ return '$' + n.toFixed(2); }
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function render(){
+  const list = carts[currentTab];
+  const listEl = document.getElementById('item-list');
+
+  if(list.length === 0){
+    listEl.innerHTML = '<div class="empty">Cart is empty. Add an item above.</div>';
+  } else {
+    listEl.innerHTML = list.map(item => {
+      const lineTotal = item.price * item.qty;
+      return `
+        <div class="item-wrap">
+          <div class="item-delete-bg">Remove</div>
+          <div class="item" data-id="${item.id}">
+            <div class="item-top">
+              <div class="item-name">${escapeHtml(item.name)}</div>
+              <div class="item-total">${fmt(lineTotal)}</div>
+              <button class="del-btn" onclick="deleteItem(${item.id})">&times;</button>
+            </div>
+            <div class="item-bottom">
+              <div class="item-price-each">${fmt(item.price)} ea</div>
+              <div class="item-controls">
+                <div class="mini-switch ${item.taxable ? 'on' : ''}" onclick="toggleItemTax(${item.id})">
+                  <div class="switch ${item.taxable ? 'on' : ''}"><div class="knob"></div></div>
+                  <span class="mini-switch-label">${item.taxable ? 'Taxable' : 'Exempt'}</span>
+                </div>
+                <div class="mini-stepper">
+                  <button class="step-btn" onclick="changeQty(${item.id}, -1)">-</button>
+                  <div class="step-val">${item.qty}</div>
+                  <button class="step-btn" onclick="changeQty(${item.id}, 1)">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const exemptSubtotal = list.filter(i => !i.taxable).reduce((s,i) => s + i.price*i.qty, 0);
+  const taxableSubtotal = list.filter(i => i.taxable).reduce((s,i) => s + i.price*i.qty, 0);
+  const rate = RATES[currentTab];
+  const tax = taxableSubtotal * rate;
+  const total = exemptSubtotal + taxableSubtotal + tax;
+
+  document.getElementById('sum-exempt').textContent = fmt(exemptSubtotal);
+  document.getElementById('sum-taxable').textContent = fmt(taxableSubtotal);
+  document.getElementById('sum-tax-label').textContent = `Tax (${(rate*100).toFixed(2)}%)`;
+  document.getElementById('sum-tax').textContent = fmt(tax);
+  document.getElementById('sum-total').textContent = fmt(total);
+  document.getElementById('loc-note').textContent = `${NAMES[currentTab]} transaction · ${list.length} item${list.length===1?'':'s'}`;
+
+  attachSwipeHandlers();
+}
+
+function attachSwipeHandlers(){
+  document.querySelectorAll('.item[data-id]').forEach(el => {
+    const id = parseInt(el.dataset.id, 10);
+    let startX = 0;
+    let dx = 0;
+    let dragging = false;
+
+    el.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      dx = 0;
+      dragging = true;
+      el.style.transition = 'none';
+    }, { passive: true });
+
+    el.addEventListener('touchmove', e => {
+      if(!dragging) return;
+      dx = e.touches[0].clientX - startX;
+      if(dx > 0) dx = 0;
+      if(dx < -110) dx = -110;
+      el.style.transform = `translateX(${dx}px)`;
+    }, { passive: true });
+
+    el.addEventListener('touchend', () => {
+      dragging = false;
+      el.style.transition = 'transform .15s ease';
+      if(dx < -70){
+        pushUndoSnapshot(currentTab, 'Item removed');
+        carts[currentTab] = carts[currentTab].filter(i => i.id !== id);
+        render();
+        saveCart(currentTab);
+      } else {
+        el.style.transform = 'translateX(0)';
+      }
+      dx = 0;
+    });
+  });
+}
+
+document.getElementById('in-price').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') addItem();
+});
+document.getElementById('in-name').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') document.getElementById('in-price').focus();
+});
+document.getElementById('in-name').addEventListener('input', function(e){
+  showSuggestions(e.target.value);
+});
+document.getElementById('in-name').addEventListener('blur', hideSuggestionsDelayed);
+
+init();
+</script>
+</body>
+</html>
