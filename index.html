@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#2a3d36">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Grocery Cart">
+<meta name="apple-mobile-web-app-title" content="grocery cart">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<title>Grocery Cart</title>
+<title>grocery cart</title>
 <style>
 :root{
   --bg:#fdf8f2;
@@ -37,7 +37,7 @@ h1{font-size:20px;color:var(--accent);margin:0;font-weight:700}
 .autosave{font-size:10px;color:var(--ink-soft);text-align:right;line-height:1.25}
 .autosave strong{color:var(--accent)}
 .tabs{display:flex;gap:6px;margin-bottom:12px}
-.tab{flex:1;text-align:center;padding:9px 4px;cursor:pointer;border:1px solid var(--line);border-radius:8px;color:var(--ink-soft);background:#fff}
+.tab{flex:1;min-height:58px;text-align:center;padding:8px 4px;cursor:pointer;border:1px solid var(--line);border-radius:10px;color:var(--ink-soft);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .tab .name{font-size:12px;font-weight:700;line-height:1.1}
 .tab .rate{font-size:10px;margin-top:3px}
 .tab.active{color:#fff;background:var(--accent);border-color:var(--accent)}
@@ -76,12 +76,12 @@ input::placeholder{color:#b7b0a6}
 .suggestion-item{padding:9px 10px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
 .suggestion-item+.suggestion-item{border-top:1px solid var(--line)}
 .suggestion-meta{color:var(--ink-soft);font-size:11px;white-space:nowrap}
-.entry-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
-.control-box{border:1px solid var(--line);border-radius:8px;padding:7px}
+.entry-controls{display:grid;grid-template-columns:156px minmax(0,1fr);gap:10px;margin-bottom:10px}
+.control-box{border:1px solid var(--line);border-radius:8px;padding:8px;min-width:0;overflow:hidden}
 .control-label{font-size:10px;color:var(--ink-soft);margin-bottom:5px}
-.qty-control{display:flex;align-items:center;justify-content:space-between;gap:4px}
-.step-btn{border:none;background:#f5f2ec;border-radius:5px;width:30px;height:30px;font-size:18px;line-height:1;color:var(--ink)}
-.qty-input{width:42px!important;padding:5px!important;text-align:center;font-size:14px!important}
+.qty-control{display:grid;grid-template-columns:40px minmax(48px,1fr) 40px;gap:8px;align-items:center;width:100%;max-width:100%}
+.step-btn{border:none;background:#f5f2ec;border-radius:8px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink);display:flex;align-items:center;justify-content:center;padding:0;margin:0;min-width:0}
+.qty-input{width:100%!important;min-width:0!important;height:40px!important;padding:4px 2px!important;text-align:center;font-size:16px!important;box-sizing:border-box}
 .toggle-button{width:100%;border:1px solid var(--line);background:#fafafa;border-radius:6px;padding:7px 5px;font-size:11px;font-weight:700;color:var(--ink-soft)}
 .toggle-button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-dark)}
 .toggle-button.tax.on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
@@ -186,58 +186,122 @@ h1,.saved,.tab,.section-title,.field label,.balance .label,.recent-head,.micro,
   text-transform: none;
 }
 
+
+/* v3.2 lowercase + alignment polish */
+body :not(input):not(textarea) { text-transform: lowercase; }
+input::placeholder { text-transform: lowercase; }
+@media (max-width:420px){
+  .entry-controls{grid-template-columns:132px minmax(0,1fr)}
+  .control-box{min-width:0}
+  .qty-control{grid-template-columns:34px minmax(42px,1fr) 34px;gap:6px}
+  .step-btn{width:34px;height:36px}
+}
+
+
+@media(max-width:420px){
+  .entry-controls{grid-template-columns:148px minmax(0,1fr);gap:8px}
+  .qty-control{grid-template-columns:38px minmax(44px,1fr) 38px;gap:7px}
+  .step-btn{width:38px;height:40px}
+}
+
+
+/* v3.4 quantity control: authoritative final layout */
+.entry-controls{
+  grid-template-columns:170px minmax(0,1fr) !important;
+  gap:10px !important;
+}
+.entry-controls .control-box:first-child{
+  min-width:0 !important;
+  overflow:hidden !important;
+  padding:8px !important;
+}
+.qty-control{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:6px !important;
+  width:100% !important;
+  max-width:100% !important;
+  align-items:center !important;
+}
+.qty-control .step-btn,
+.qty-control .qty-input{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:40px !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+}
+.qty-control .step-btn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:0 !important;
+  line-height:1 !important;
+}
+.qty-control .qty-input{
+  text-align:center !important;
+  padding:4px 0 !important;
+}
+@media(max-width:420px){
+  .entry-controls{
+    grid-template-columns:164px minmax(0,1fr) !important;
+    gap:8px !important;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topline">
-    <h1>Grocery Cart Calculator</h1>
-    <div class="autosave"><strong>Auto-saved on this device</strong><br>Safe to close or leave the page</div>
+    <h1>grocery cart calculator</h1>
+    <div class="autosave"><strong>auto-saved on this device</strong><br>safe to close or leave the page</div>
   </div>
 
   <div class="tabs">
     <div class="tab active" id="tab-costco" onclick="switchTab('costco')">
-      <div class="name">Costco<br>Vallejo</div><div class="rate">9.25%</div>
+      <div class="name">costco<br>vallejo</div><div class="rate">9.25%</div>
     </div>
     <div class="tab" id="tab-walmart" onclick="switchTab('walmart')">
-      <div class="name">Walmart<br>American Canyon</div><div class="rate">7.75%</div>
+      <div class="name">walmart<br>american canyon</div><div class="rate">7.75%</div>
     </div>
     <div class="tab" id="tab-other" onclick="switchTab('other')">
-      <div class="name">Other</div><div class="rate" id="other-tab-rate">8.75%</div>
+      <div class="name">other</div><div class="rate" id="other-tab-rate">8.75%</div>
     </div>
   </div>
 
   <div class="card">
-    <p class="card-title">Shopping budgets</p>
+    <p class="card-title">shopping budgets</p>
     <div class="budget-grid">
       <div class="field">
-        <label>EBT balance available</label>
+        <label>ebt balance available</label>
         <div class="money-wrap"><span class="currency">$</span><input id="ebt-balance" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="saveSettingsAndRender()"></div>
       </div>
       <div class="field">
-        <label>Trip spending limit</label>
-        <div class="money-wrap"><span class="currency">$</span><input id="trip-budget" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Optional" oninput="saveSettingsAndRender()"></div>
+        <label>trip spending limit</label>
+        <div class="money-wrap"><span class="currency">$</span><input id="trip-budget" type="number" min="0" step="0.01" inputmode="decimal" placeholder="optional" oninput="saveSettingsAndRender()"></div>
       </div>
     </div>
     <div class="other-rate-row" id="other-rate-row">
-      <label>Other location sales tax rate</label>
-      <input id="other-rate" type="number" min="0" max="20" step="0.01" inputmode="decimal" value="8.75" oninput="updateOtherRate()">
+      <label>other location sales tax rate</label>
+      <input id="other-rate" type="number" min="0" max="20" step="0.01" inputmode="decimal" value="8.75" oninput="updateotherRate()">
     </div>
     <div class="balance-strip">
       <div class="balance-box" id="ebt-rem-box">
-        <div class="balance-label">EBT remaining after cart</div>
+        <div class="balance-label">ebt remaining after cart</div>
         <div class="balance-value" id="ebt-rem">$0.00</div>
       </div>
       <div class="balance-box" id="budget-rem-box">
-        <div class="balance-label">Trip budget remaining</div>
-        <div class="balance-value" id="budget-rem">Not set</div>
+        <div class="balance-label">trip budget remaining</div>
+        <div class="balance-value" id="budget-rem">not set</div>
       </div>
     </div>
   </div>
 
   <div class="recent-wrap" id="recent-wrap">
     <div class="recent-head">
-      <span class="recent-label">Recent at this store</span>
+      <span class="recent-label">recent at this store</span>
     </div>
     <div class="recent-scroll" id="recent-items"></div>
   </div>
@@ -245,15 +309,15 @@ h1,.saved,.tab,.section-title,.field label,.balance .label,.recent-head,.micro,
   <div class="card add-card">
     <div class="row">
       <div class="autocomplete-wrap">
-        <input type="text" id="in-name" placeholder="Item name" autocomplete="off">
+        <input type="text" id="in-name" placeholder="item name" autocomplete="off">
         <div class="suggestions" id="suggestions"></div>
       </div>
-      <input type="number" id="in-price" class="f-price" placeholder="Price" inputmode="decimal" step="0.01" min="0">
+      <input type="number" id="in-price" class="f-price" placeholder="price" inputmode="decimal" step="0.01" min="0">
     </div>
 
     <div class="entry-controls">
       <div class="control-box">
-        <div class="control-label">Quantity</div>
+        <div class="control-label">quantity</div>
         <div class="qty-control">
           <button class="step-btn" onclick="adjustDraftQty(-1)">−</button>
           <input class="qty-input" type="number" min="1" step="1" id="draft-qty" value="1" inputmode="numeric">
@@ -261,26 +325,26 @@ h1,.saved,.tab,.section-title,.field label,.balance .label,.recent-head,.micro,
         </div>
       </div>
       <div class="control-box">
-        <div class="control-label">Category</div>
+        <div class="control-label">category</div>
         <select id="draft-category" class="category-select" onchange="categoryChanged()">
-          <option value="food">food / groceries</option><option value="produce">produce</option><option value="meat">meat / seafood</option><option value="dairy">dairy / eggs</option><option value="snack">snack / candy</option><option value="drink">noncarbonated drink</option><option value="soda">Soda / carbonated</option><option value="hot">hot prepared food</option><option value="household">household</option><option value="personal">personal care</option><option value="pet">pet food / supplies</option><option value="supplement">vitamin / supplement</option><option value="medicine">medicine</option><option value="alcohol">alcohol</option><option value="unknown">unsure</option>
+          <option value="food">food / groceries</option><option value="produce">produce</option><option value="meat">meat / seafood</option><option value="dairy">dairy / eggs</option><option value="snack">snack / candy</option><option value="drink">noncarbonated drink</option><option value="soda">soda / carbonated</option><option value="hot">hot prepared food</option><option value="household">household</option><option value="personal">personal care</option><option value="pet">pet food / supplies</option><option value="supplement">vitamin / supplement</option><option value="medicine">medicine</option><option value="alcohol">alcohol</option><option value="unknown">unsure</option>
         </select>
       </div>
     </div>
     <div class="status-row">
-      <span id="status-ebt" class="status-pill good">EBT eligible</span><span id="status-tax" class="status-pill good">Tax exempt</span>
+      <span id="status-ebt" class="status-pill good">ebt eligible</span><span id="status-tax" class="status-pill good">tax exempt</span>
       <button class="override-btn" onclick="toggleOverrides()">override</button>
     </div>
     <div id="override-panel" class="override-panel">
-      <div class="override-group"><div class="control-label">EBT override</div><div><button id="ov-ebt-yes" class="override-choice" onclick="setEbtOverride(true)">Eligible</button><button id="ov-ebt-no" class="override-choice" onclick="setEbtOverride(false)">Not EBT</button></div></div>
-      <div class="override-group"><div class="control-label">Tax override</div><div><button id="ov-tax-no" class="override-choice" onclick="setTaxOverride(false)">Exempt</button><button id="ov-tax-yes" class="override-choice" onclick="setTaxOverride(true)">Taxable</button></div></div>
+      <div class="override-group"><div class="control-label">ebt override</div><div><button id="ov-ebt-yes" class="override-choice" onclick="setEbtOverride(true)">eligible</button><button id="ov-ebt-no" class="override-choice" onclick="setEbtOverride(false)">not ebt</button></div></div>
+      <div class="override-group"><div class="control-label">tax override</div><div><button id="ov-tax-no" class="override-choice" onclick="settaxOverride(false)">exempt</button><button id="ov-tax-yes" class="override-choice" onclick="settaxOverride(true)">taxable</button></div></div>
     </div>
     <button class="add-btn" onclick="addItem()">add to cart</button>
-    <div class="category-note" id="category-note">Regular grocery food defaults to EBT eligible and California sales-tax exempt. You can override either status.</div>
+    <div class="category-note" id="category-note">Regular grocery food defaults to ebt eligible and California sales-tax exempt. you can override either status.</div>
   </div>
 
   <div class="list-header">
-    <span class="list-label">In your cart</span>
+    <span class="list-label">in your cart</span>
     <div class="header-actions">
       <button class="link-btn" onclick="toggleHistory()">trip history</button>
       <button class="link-btn danger" onclick="requestClearCart()">clear</button>
@@ -290,28 +354,28 @@ h1,.saved,.tab,.section-title,.field label,.balance .label,.recent-head,.micro,
   <div id="item-list"></div>
 
   <div class="card history" id="history-card">
-    <p class="card-title">Recent completed trips</p>
+    <p class="card-title">recent completed trips</p>
     <div id="history-list"></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="clear-modal">
   <div class="modal-box">
-    <p class="modal-title">Clear this cart?</p>
-    <p class="modal-text">This removes all items from the current store cart. Your saved recent products and trip history will stay.</p>
+    <p class="modal-title">clear this cart?</p>
+    <p class="modal-text">this removes all items from the current store cart. your saved recent products and trip history will stay.</p>
     <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeModal('clear-modal')">Cancel</button>
-      <button class="modal-confirm" onclick="confirmClearCart()">Clear cart</button>
+      <button class="modal-cancel" onclick="closeModal('clear-modal')">cancel</button>
+      <button class="modal-confirm" onclick="confirmClearCart()">clear cart</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="finish-modal">
   <div class="modal-box">
-    <p class="modal-title">Finish this shopping trip?</p>
-    <p class="modal-text">A summary will be saved to trip history, then the current store cart will be cleared.</p>
+    <p class="modal-title">finish this shopping trip?</p>
+    <p class="modal-text">a summary will be saved to trip history, then the current store cart will be cleared.</p>
     <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeModal('finish-modal')">Cancel</button>
+      <button class="modal-cancel" onclick="closeModal('finish-modal')">cancel</button>
       <button class="modal-confirm" style="background:var(--accent)" onclick="confirmFinishTrip()">finish trip</button>
     </div>
   </div>
@@ -319,23 +383,23 @@ h1,.saved,.tab,.section-title,.field label,.balance .label,.recent-head,.micro,
 
 <div class="undo-toast" id="undo-toast">
   <span id="undo-text"></span>
-  <button onclick="performUndo()">Undo</button>
+  <button onclick="performundo()">undo</button>
 </div>
 
 <div class="summary">
   <div class="summary-inner">
     <div class="sum-grid">
-      <div class="sum-row"><span>EBT eligible</span><span id="sum-ebt">$0.00</span></div>
-      <div class="sum-row"><span>Non-EBT</span><span id="sum-nonebt">$0.00</span></div>
-      <div class="sum-row"><span>Uncertain</span><span id="sum-unknown">$0.00</span></div>
-      <div class="sum-row"><span id="sum-tax-label">Tax</span><span id="sum-tax">$0.00</span></div>
+      <div class="sum-row"><span>ebt eligible</span><span id="sum-ebt">$0.00</span></div>
+      <div class="sum-row"><span>non-ebt</span><span id="sum-nonebt">$0.00</span></div>
+      <div class="sum-row"><span>uncertain</span><span id="sum-unknown">$0.00</span></div>
+      <div class="sum-row"><span id="sum-tax-label">tax</span><span id="sum-tax">$0.00</span></div>
     </div>
     <div class="sum-total">
-      <span class="label">Estimated Total</span>
+      <span class="label">estimated total</span>
       <span class="value" id="sum-total">$0.00</span>
     </div>
     <div class="sum-bottom">
-      <div class="sum-note" id="sum-note">Costco Vallejo · 0 items</div>
+      <div class="sum-note" id="sum-note">costco vallejo · 0 items</div>
       <button class="finish-btn" onclick="requestFinishTrip()">finish trip</button>
     </div>
   </div>
@@ -343,27 +407,27 @@ h1,.saved,.tab,.section-title,.field label,.balance .label,.recent-head,.micro,
 
 <script>
 const STORAGE_KEY='grocery-cart-calculator-v3', OLD_KEY='grocery-cart-calculator-v2';
-const STORE_NAMES={costco:'Costco Vallejo',walmart:'Walmart American Canyon',other:'Other location'};
+const STORE_NAMES={costco:'costco vallejo',walmart:'walmart american canyon',other:'other location'};
 const CATEGORY={
- food:{label:'Food / groceries',ebt:true,taxable:false,note:'Regular grocery food defaults to EBT eligible and California sales-tax exempt.'},
- produce:{label:'Produce',ebt:true,taxable:false,note:'Produce defaults to EBT eligible and sales-tax exempt.'},
- meat:{label:'Meat / seafood',ebt:true,taxable:false,note:'Meat and seafood for home preparation default to EBT eligible and sales-tax exempt.'},
- dairy:{label:'Dairy / eggs',ebt:true,taxable:false,note:'Dairy and eggs default to EBT eligible and sales-tax exempt.'},
- snack:{label:'Snack / candy',ebt:true,taxable:false,note:'Ordinary snacks and candy default to EBT eligible and sales-tax exempt in California.'},
- drink:{label:'Noncarbonated drink',ebt:true,taxable:false,note:'Ordinary noncarbonated food beverages default to EBT eligible and sales-tax exempt.'},
- soda:{label:'Soda / carbonated',ebt:true,taxable:true,note:'Carbonated beverages default to EBT eligible but taxable in California.'},
- hot:{label:'Hot prepared food',ebt:false,taxable:true,note:'Hot prepared food defaults to not EBT eligible and taxable.'},
- household:{label:'Household',ebt:false,taxable:true,note:'Household goods default to not EBT eligible and taxable.'},
- personal:{label:'Personal care',ebt:false,taxable:true,note:'Personal-care items default to not EBT eligible and taxable.'},
- pet:{label:'Pet food / supplies',ebt:false,taxable:true,note:'Pet food and pet supplies default to not EBT eligible and taxable.'},
- supplement:{label:'Vitamin / supplement',ebt:false,taxable:true,note:'Dietary supplements default to not EBT eligible and taxable.'},
- medicine:{label:'Medicine',ebt:false,taxable:true,note:'Over-the-counter medicine defaults to not EBT eligible and taxable.'},
- alcohol:{label:'Alcohol',ebt:false,taxable:true,note:'Alcohol defaults to not EBT eligible and taxable.'},
- unknown:{label:'Unsure',ebt:null,taxable:null,note:'Uncertain items stay separate from EBT totals and are assumed taxable in the grand total for conservative budgeting.'},
- custom:{label:'Saved / custom',ebt:null,taxable:null,note:'This previously saved item keeps its existing EBT and tax settings.'}
+ food:{label:'food / groceries',ebt:true,taxable:false,note:'Regular grocery food defaults to ebt eligible and California sales-tax exempt.'},
+ produce:{label:'produce',ebt:true,taxable:false,note:'produce defaults to ebt eligible and sales-tax exempt.'},
+ meat:{label:'meat / seafood',ebt:true,taxable:false,note:'Meat and seafood for home preparation default to ebt eligible and sales-tax exempt.'},
+ dairy:{label:'dairy / eggs',ebt:true,taxable:false,note:'Dairy and eggs default to ebt eligible and sales-tax exempt.'},
+ snack:{label:'snack / candy',ebt:true,taxable:false,note:'Ordinary snacks and candy default to ebt eligible and sales-tax exempt in California.'},
+ drink:{label:'noncarbonated drink',ebt:true,taxable:false,note:'Ordinary noncarbonated food beverages default to ebt eligible and sales-tax exempt.'},
+ soda:{label:'soda / carbonated',ebt:true,taxable:true,note:'Carbonated beverages default to ebt eligible but taxable in California.'},
+ hot:{label:'hot prepared food',ebt:false,taxable:true,note:'hot prepared food defaults to not ebt eligible and taxable.'},
+ household:{label:'household',ebt:false,taxable:true,note:'household goods default to not ebt eligible and taxable.'},
+ personal:{label:'personal care',ebt:false,taxable:true,note:'Personal-care items default to not ebt eligible and taxable.'},
+ pet:{label:'pet food / supplies',ebt:false,taxable:true,note:'Pet food and pet supplies default to not ebt eligible and taxable.'},
+ supplement:{label:'vitamin / supplement',ebt:false,taxable:true,note:'Dietary supplements default to not ebt eligible and taxable.'},
+ medicine:{label:'medicine',ebt:false,taxable:true,note:'Over-the-counter medicine defaults to not ebt eligible and taxable.'},
+ alcohol:{label:'alcohol',ebt:false,taxable:true,note:'alcohol defaults to not ebt eligible and taxable.'},
+ unknown:{label:'unsure',ebt:null,taxable:null,note:'uncertain items stay separate from EBT totals and are assumed taxable in the grand total for conservative budgeting.'},
+ custom:{label:'saved / custom',ebt:null,taxable:null,note:'This previously saved item keeps its existing EBT and tax settings.'}
 };
 const DEFAULT_DATA={version:3,currentTab:'costco',rates:{costco:.0925,walmart:.0775,other:.0875},settings:{ebtBalance:'',tripBudget:''},carts:{costco:[],walmart:[],other:[]},knownItems:{costco:[],walmart:[],other:[]},history:[],nextId:1};
-let data=clone(DEFAULT_DATA),draftEbtOverride=null,draftTaxOverride=null,currentMatches=[],undoSnapshot=null,undoTimeout=null;
+let data=clone(DEFAULT_DATA),draftEbtOverride=null,drafttaxOverride=null,currentMatches=[],undoSnapshot=null,undoTimeout=null;
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function fmt(x){return '$'+Number(x||0).toFixed(2)}
 function num(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
@@ -380,41 +444,41 @@ function loadData(){
 }
 function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));return true}catch(e){document.querySelector('.autosave').innerHTML='<strong style="color:#d1481f">Could not save</strong><br>Browser storage unavailable';return false}}
 function saveSettingsAndRender(){data.settings.ebtBalance=document.getElementById('ebt-balance').value;data.settings.tripBudget=document.getElementById('trip-budget').value;saveData();renderSummary()}
-function updateOtherRate(){const p=Math.max(0,num(document.getElementById('other-rate').value));data.rates.other=p/100;document.getElementById('other-tab-rate').textContent=p.toFixed(2)+'%';saveData();renderSummary()}
+function updateotherRate(){const p=Math.max(0,num(document.getElementById('other-rate').value));data.rates.other=p/100;document.getElementById('other-tab-rate').textContent=p.toFixed(2)+'%';saveData();renderSummary()}
 function init(){loadData();document.getElementById('ebt-balance').value=data.settings.ebtBalance??'';document.getElementById('trip-budget').value=data.settings.tripBudget??'';document.getElementById('other-rate').value=(data.rates.other*100).toFixed(2);document.getElementById('other-tab-rate').textContent=(data.rates.other*100).toFixed(2)+'%';switchTab(data.currentTab||'costco',false);renderHistory();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 function switchTab(tab,persist=true){data.currentTab=tab;['costco','walmart','other'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tab));document.getElementById('other-rate-row').classList.toggle('show',tab==='other');if(persist)saveData();resetDraft();render()}
-function resetDraft(){document.getElementById('in-name').value='';document.getElementById('in-price').value='';document.getElementById('draft-qty').value=1;document.getElementById('draft-category').value='food';draftEbtOverride=null;draftTaxOverride=null;document.getElementById('override-panel').classList.remove('show');syncDraftStatus();hideSuggestions()}
-function draftState(){const c=CATEGORY[document.getElementById('draft-category').value]||CATEGORY.food;return{cat:c,ebt:draftEbtOverride!==null?draftEbtOverride:c.ebt,taxable:draftTaxOverride!==null?draftTaxOverride:c.taxable}}
-function categoryChanged(){draftEbtOverride=null;draftTaxOverride=null;syncDraftStatus()}
-function syncDraftStatus(){const d=draftState(),e=document.getElementById('status-ebt'),t=document.getElementById('status-tax');e.textContent=d.ebt===null?'EBT unknown':d.ebt?'EBT eligible':'Not EBT';e.className='status-pill '+(d.ebt===null?'unknown':d.ebt?'good':'unknown');t.textContent=d.taxable===null?'Tax unknown':d.taxable?'Taxable':'Tax exempt';t.className='status-pill '+(d.taxable===null?'unknown':d.taxable?'tax':'good');document.getElementById('category-note').textContent=d.cat.note+' You can override either status.';document.getElementById('ov-ebt-yes').classList.toggle('on',draftEbtOverride===true);document.getElementById('ov-ebt-no').classList.toggle('on',draftEbtOverride===false);document.getElementById('ov-tax-no').classList.toggle('on',draftTaxOverride===false);document.getElementById('ov-tax-yes').classList.toggle('tax-on',draftTaxOverride===true)}
+function resetDraft(){document.getElementById('in-name').value='';document.getElementById('in-price').value='';document.getElementById('draft-qty').value=1;document.getElementById('draft-category').value='food';draftEbtOverride=null;drafttaxOverride=null;document.getElementById('override-panel').classList.remove('show');syncDraftStatus();hideSuggestions()}
+function draftState(){const c=CATEGORY[document.getElementById('draft-category').value]||CATEGORY.food;return{cat:c,ebt:draftEbtOverride!==null?draftEbtOverride:c.ebt,taxable:drafttaxOverride!==null?drafttaxOverride:c.taxable}}
+function categoryChanged(){draftEbtOverride=null;drafttaxOverride=null;syncDraftStatus()}
+function syncDraftStatus(){const d=draftState(),e=document.getElementById('status-ebt'),t=document.getElementById('status-tax');e.textContent=d.ebt===null?'ebt unknown':d.ebt?'ebt eligible':'not ebt';e.className='status-pill '+(d.ebt===null?'unknown':d.ebt?'good':'unknown');t.textContent=d.taxable===null?'tax unknown':d.taxable?'taxable':'tax exempt';t.className='status-pill '+(d.taxable===null?'unknown':d.taxable?'tax':'good');document.getElementById('category-note').textContent=d.cat.note+' you can override either status.';document.getElementById('ov-ebt-yes').classList.toggle('on',draftEbtOverride===true);document.getElementById('ov-ebt-no').classList.toggle('on',draftEbtOverride===false);document.getElementById('ov-tax-no').classList.toggle('on',drafttaxOverride===false);document.getElementById('ov-tax-yes').classList.toggle('tax-on',drafttaxOverride===true)}
 function toggleOverrides(){document.getElementById('override-panel').classList.toggle('show')}
 function setEbtOverride(v){draftEbtOverride=draftEbtOverride===v?null:v;syncDraftStatus()}
-function setTaxOverride(v){draftTaxOverride=draftTaxOverride===v?null:v;syncDraftStatus()}
+function settaxOverride(v){drafttaxOverride=drafttaxOverride===v?null:v;syncDraftStatus()}
 function adjustDraftQty(delta){const e=document.getElementById('draft-qty');e.value=Math.max(1,Math.round(num(e.value)||1)+delta)}
 function storeKnownItem(item){const list=data.knownItems[data.currentTab]||[],idx=list.findIndex(k=>k.name.toLowerCase()===item.name.toLowerCase());const entry={name:item.name,price:item.price,category:item.category,ebt:item.ebt,taxable:item.taxable,lastUsed:Date.now(),uses:idx>=0?(list[idx].uses||0)+1:1};if(idx>=0)list.splice(idx,1);list.unshift(entry);data.knownItems[data.currentTab]=list.slice(0,80)}
-function addItem(){const nameEl=document.getElementById('in-name'),priceEl=document.getElementById('in-price'),name=nameEl.value.trim(),price=parseFloat(priceEl.value),qty=Math.max(1,Math.round(num(document.getElementById('draft-qty').value)||1));if(!name){nameEl.focus();return}if(!Number.isFinite(price)||price<0){priceEl.focus();return}pushUndo('Item added');const d=draftState(),item={id:data.nextId++,name,price,qty,category:document.getElementById('draft-category').value,ebt:d.ebt,taxable:d.taxable};currentCart().push(item);storeKnownItem(item);saveData();resetDraft();render();nameEl.focus()}
+function addItem(){const nameEl=document.getElementById('in-name'),priceEl=document.getElementById('in-price'),name=nameEl.value.trim(),price=parseFloat(priceEl.value),qty=Math.max(1,Math.round(num(document.getElementById('draft-qty').value)||1));if(!name){nameEl.focus();return}if(!Number.isFinite(price)||price<0){priceEl.focus();return}pushundo('item added');const d=draftState(),item={id:data.nextId++,name,price,qty,category:document.getElementById('draft-category').value,ebt:d.ebt,taxable:d.taxable};currentCart().push(item);storeKnownItem(item);saveData();resetDraft();render();nameEl.focus()}
 function updateItemPrice(id,value){const i=currentCart().find(x=>x.id===id),p=parseFloat(value);if(!i||!Number.isFinite(p)||p<0)return;i.price=p;storeKnownItem(i);saveData();renderSummary()}
 function updateQty(id,value){const i=currentCart().find(x=>x.id===id);if(!i)return;i.qty=Math.max(1,Math.round(num(value)||1));saveData();render()}
 function changeQty(id,delta){const i=currentCart().find(x=>x.id===id);if(!i)return;i.qty=Math.max(1,i.qty+delta);saveData();render()}
-function deleteItem(id){pushUndo('Item removed');data.carts[data.currentTab]=currentCart().filter(x=>x.id!==id);saveData();render()}
+function deleteItem(id){pushundo('item removed');data.carts[data.currentTab]=currentCart().filter(x=>x.id!==id);saveData();render()}
 function showSuggestions(q){const b=document.getElementById('suggestions'),s=q.trim().toLowerCase();if(!s){hideSuggestions();return}currentMatches=(data.knownItems[data.currentTab]||[]).filter(k=>k.name.toLowerCase().includes(s)).slice(0,6);if(!currentMatches.length){hideSuggestions();return}b.innerHTML=currentMatches.map((k,i)=>`<div class="suggestion-item" onmousedown="selectSuggestion(${i})"><span>${escapeHtml(k.name)}</span><span class="suggestion-meta">${fmt(k.price)} · ${escapeHtml((CATEGORY[safeCat(k.category)]||CATEGORY.custom).label)}</span></div>`).join('');b.style.display='block'}
 function hideSuggestions(){const b=document.getElementById('suggestions');b.style.display='none';b.innerHTML='';currentMatches=[]}
-function applyKnown(k){document.getElementById('in-name').value=k.name;document.getElementById('in-price').value=Number(k.price).toFixed(2);const cat=CATEGORY[k.category]?k.category:'food';document.getElementById('draft-category').value=cat;const base=CATEGORY[cat];draftEbtOverride=k.ebt===base.ebt?null:k.ebt;draftTaxOverride=k.taxable===base.taxable?null:k.taxable;syncDraftStatus();document.getElementById('in-price').focus()}
+function applyKnown(k){document.getElementById('in-name').value=k.name;document.getElementById('in-price').value=Number(k.price).toFixed(2);const cat=CATEGORY[k.category]?k.category:'food';document.getElementById('draft-category').value=cat;const base=CATEGORY[cat];draftEbtOverride=k.ebt===base.ebt?null:k.ebt;drafttaxOverride=k.taxable===base.taxable?null:k.taxable;syncDraftStatus();document.getElementById('in-price').focus()}
 function selectSuggestion(i){const k=currentMatches[i];if(k)applyKnown(k);hideSuggestions()}
 function quickAddKnown(i){const k=(data.knownItems[data.currentTab]||[])[i];if(k)applyKnown(k)}
-function cartMath(){let merchandise=0,ebtEligible=0,nonEbt=0,unknown=0,taxable=0,unknownTax=0;currentCart().forEach(i=>{const x=i.price*i.qty;merchandise+=x;if(i.ebt===null)unknown+=x;else if(i.ebt)ebtEligible+=x;else nonEbt+=x;if(i.taxable===true)taxable+=x;else if(i.taxable===null)unknownTax+=x});const rate=data.rates[data.currentTab],tax=(taxable+unknownTax)*rate,total=merchandise+tax;return{merchandise,ebtEligible,nonEbt,unknown,taxableSubtotal:taxable,unknownTax,tax,total}}
+function cartMath(){let merchandise=0,ebteligible=0,nonEbt=0,unknown=0,taxable=0,unknowntax=0;currentCart().forEach(i=>{const x=i.price*i.qty;merchandise+=x;if(i.ebt===null)unknown+=x;else if(i.ebt)ebteligible+=x;else nonEbt+=x;if(i.taxable===true)taxable+=x;else if(i.taxable===null)unknowntax+=x});const rate=data.rates[data.currentTab],tax=(taxable+unknowntax)*rate,total=merchandise+tax;return{merchandise,ebteligible,nonEbt,unknown,taxableSubtotal:taxable,unknowntax,tax,total}}
 function render(){renderRecent();renderItems();renderSummary()}
 function renderRecent(){const list=(data.knownItems[data.currentTab]||[]).slice(0,8),w=document.getElementById('recent-wrap'),e=document.getElementById('recent-items');if(!list.length){w.style.display='none';return}w.style.display='';e.innerHTML=list.map((k,i)=>`<button class="recent-chip" onclick="quickAddKnown(${i})">${escapeHtml(k.name)}<span class="chip-price">${fmt(k.price)}</span></button>`).join('')}
-function pill(v,type){if(type==='ebt'){if(v===null)return'<span class="status-pill unknown">EBT ?</span>';return `<span class="status-pill ${v?'good':'unknown'}">${v?'EBT':'Non-EBT'}</span>`}if(v===null)return'<span class="status-pill unknown">Tax ?</span>';return `<span class="status-pill ${v?'tax':'good'}">${v?'Taxable':'Exempt'}</span>`}
-function renderItems(){const list=currentCart(),e=document.getElementById('item-list');if(!list.length){e.innerHTML='<div class="empty">Cart is empty. Add an item above.</div>';return}e.innerHTML=list.map(i=>`<div class="item-wrap"><div class="item-delete-bg">Remove</div><div class="item" data-id="${i.id}"><div class="item-top"><div class="item-name">${escapeHtml(i.name)}</div><div class="item-total">${fmt(i.price*i.qty)}</div><button class="icon-btn" aria-label="Delete" onclick="deleteItem(${i.id})">&times;</button></div><div class="item-meta"><span class="status-pill">${escapeHtml((CATEGORY[safeCat(i.category)]||CATEGORY.custom).label)}</span>${pill(i.ebt,'ebt')}${pill(i.taxable,'tax')}</div><div class="item-sub"><div class="item-price"><span>$</span><input class="inline-price" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(i.price).toFixed(2)}" onchange="updateItemPrice(${i.id},this.value)"><span>ea</span></div><div class="item-controls"><div class="mini-qty"><button onclick="changeQty(${i.id},-1)">−</button><input type="number" min="1" step="1" inputmode="numeric" value="${i.qty}" onchange="updateQty(${i.id},this.value)"><button onclick="changeQty(${i.id},1)">+</button></div></div></div></div></div>`).join('');attachSwipeHandlers()}
-function renderSummary(){const m=cartMath(),rate=data.rates[data.currentTab];document.getElementById('sum-ebt').textContent=fmt(m.ebtEligible);document.getElementById('sum-nonebt').textContent=fmt(m.nonEbt);document.getElementById('sum-unknown').textContent=fmt(m.unknown);document.getElementById('sum-tax-label').textContent=`Tax (${(rate*100).toFixed(2)}%)`;document.getElementById('sum-tax').textContent=fmt(m.tax);document.getElementById('sum-total').textContent=fmt(m.total);const count=currentCart().reduce((s,i)=>s+i.qty,0);document.getElementById('sum-note').innerHTML=`${escapeHtml(STORE_NAMES[data.currentTab])} · ${count} item${count===1?'':'s'}${m.unknown>0?'<br>Uncertain items assumed taxable; EBT not assumed.':''}`;const er=data.settings.ebtBalance,he=er!==''&&er!==null,ev=num(er)-m.ebtEligible;document.getElementById('ebt-rem').textContent=he?fmt(ev):'Not set';document.getElementById('ebt-rem-box').classList.toggle('warn',he&&ev<0);const br=data.settings.tripBudget,hb=br!==''&&br!==null,bv=num(br)-m.total;document.getElementById('budget-rem').textContent=hb?fmt(bv):'Not set';document.getElementById('budget-rem-box').classList.toggle('warn',hb&&bv<0)}
-function pushUndo(label){undoSnapshot=clone(data);document.getElementById('undo-text').textContent=label;document.getElementById('undo-toast').style.display='flex';clearTimeout(undoTimeout);undoTimeout=setTimeout(()=>{document.getElementById('undo-toast').style.display='none';undoSnapshot=null},5000)}
-function performUndo(){if(!undoSnapshot)return;data=undoSnapshot;undoSnapshot=null;clearTimeout(undoTimeout);document.getElementById('undo-toast').style.display='none';saveData();document.getElementById('ebt-balance').value=data.settings.ebtBalance??'';document.getElementById('trip-budget').value=data.settings.tripBudget??'';render()}
-function requestClearCart(){if(currentCart().length)document.getElementById('clear-modal').style.display='flex'}function closeModal(id){document.getElementById(id).style.display='none'}function confirmClearCart(){pushUndo('Cart cleared');data.carts[data.currentTab]=[];saveData();render();closeModal('clear-modal')}
+function pill(v,type){if(type==='ebt'){if(v===null)return'<span class="status-pill unknown">EBT ?</span>';return `<span class="status-pill ${v?'good':'unknown'}">${v?'EBT':'non-ebt'}</span>`}if(v===null)return'<span class="status-pill unknown">tax ?</span>';return `<span class="status-pill ${v?'tax':'good'}">${v?'taxable':'exempt'}</span>`}
+function renderItems(){const list=currentCart(),e=document.getElementById('item-list');if(!list.length){e.innerHTML='<div class="empty">cart is empty. add an item above.</div>';return}e.innerHTML=list.map(i=>`<div class="item-wrap"><div class="item-delete-bg">remove</div><div class="item" data-id="${i.id}"><div class="item-top"><div class="item-name">${escapeHtml(i.name)}</div><div class="item-total">${fmt(i.price*i.qty)}</div><button class="icon-btn" aria-label="delete" onclick="deleteItem(${i.id})">&times;</button></div><div class="item-meta"><span class="status-pill">${escapeHtml((CATEGORY[safeCat(i.category)]||CATEGORY.custom).label)}</span>${pill(i.ebt,'ebt')}${pill(i.taxable,'tax')}</div><div class="item-sub"><div class="item-price"><span>$</span><input class="inline-price" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(i.price).toFixed(2)}" onchange="updateItemPrice(${i.id},this.value)"><span>ea</span></div><div class="item-controls"><div class="mini-qty"><button onclick="changeQty(${i.id},-1)">−</button><input type="number" min="1" step="1" inputmode="numeric" value="${i.qty}" onchange="updateQty(${i.id},this.value)"><button onclick="changeQty(${i.id},1)">+</button></div></div></div></div></div>`).join('');attachSwipeHandlers()}
+function renderSummary(){const m=cartMath(),rate=data.rates[data.currentTab];document.getElementById('sum-ebt').textContent=fmt(m.ebteligible);document.getElementById('sum-nonebt').textContent=fmt(m.nonEbt);document.getElementById('sum-unknown').textContent=fmt(m.unknown);document.getElementById('sum-tax-label').textContent=`tax (${(rate*100).toFixed(2)}%)`;document.getElementById('sum-tax').textContent=fmt(m.tax);document.getElementById('sum-total').textContent=fmt(m.total);const count=currentCart().reduce((s,i)=>s+i.qty,0);document.getElementById('sum-note').innerHTML=`${escapeHtml(STORE_NAMES[data.currentTab])} · ${count} item${count===1?'':'s'}${m.unknown>0?'<br>uncertain items assumed taxable; EBT not assumed.':''}`;const er=data.settings.ebtBalance,he=er!==''&&er!==null,ev=num(er)-m.ebteligible;document.getElementById('ebt-rem').textContent=he?fmt(ev):'not set';document.getElementById('ebt-rem-box').classList.toggle('warn',he&&ev<0);const br=data.settings.tripBudget,hb=br!==''&&br!==null,bv=num(br)-m.total;document.getElementById('budget-rem').textContent=hb?fmt(bv):'not set';document.getElementById('budget-rem-box').classList.toggle('warn',hb&&bv<0)}
+function pushundo(label){undoSnapshot=clone(data);document.getElementById('undo-text').textContent=label;document.getElementById('undo-toast').style.display='flex';clearTimeout(undoTimeout);undoTimeout=setTimeout(()=>{document.getElementById('undo-toast').style.display='none';undoSnapshot=null},5000)}
+function performundo(){if(!undoSnapshot)return;data=undoSnapshot;undoSnapshot=null;clearTimeout(undoTimeout);document.getElementById('undo-toast').style.display='none';saveData();document.getElementById('ebt-balance').value=data.settings.ebtBalance??'';document.getElementById('trip-budget').value=data.settings.tripBudget??'';render()}
+function requestClearCart(){if(currentCart().length)document.getElementById('clear-modal').style.display='flex'}function closeModal(id){document.getElementById(id).style.display='none'}function confirmClearCart(){pushundo('cart cleared');data.carts[data.currentTab]=[];saveData();render();closeModal('clear-modal')}
 function requestFinishTrip(){if(currentCart().length)document.getElementById('finish-modal').style.display='flex'}
-function confirmFinishTrip(){const m=cartMath();data.history.unshift({id:Date.now(),store:data.currentTab,date:new Date().toISOString(),total:m.total,ebtEligible:m.ebtEligible,nonEbt:m.nonEbt,unknown:m.unknown,tax:m.tax,lineCount:currentCart().length});data.history=data.history.slice(0,20);data.carts[data.currentTab]=[];saveData();render();renderHistory();closeModal('finish-modal')}
+function confirmFinishTrip(){const m=cartMath();data.history.unshift({id:Date.now(),store:data.currentTab,date:new Date().toISOString(),total:m.total,ebteligible:m.ebteligible,nonEbt:m.nonEbt,unknown:m.unknown,tax:m.tax,lineCount:currentCart().length});data.history=data.history.slice(0,20);data.carts[data.currentTab]=[];saveData();render();renderHistory();closeModal('finish-modal')}
 function toggleHistory(){document.getElementById('history-card').classList.toggle('show');renderHistory()}
-function renderHistory(){const e=document.getElementById('history-list');if(!data.history.length){e.innerHTML='<div class="empty" style="padding:10px">No completed trips yet.</div>';return}e.innerHTML=data.history.slice(0,10).map(t=>`<div class="trip-row"><div class="trip-main"><span>${escapeHtml(STORE_NAMES[t.store]||'Store')}</span><span>${fmt(t.total)}</span></div><div class="trip-sub">${new Date(t.date).toLocaleDateString()} · EBT ${fmt(t.ebtEligible||0)} · Non-EBT ${fmt(t.nonEbt||0)}${t.unknown?` · Uncertain ${fmt(t.unknown)}`:''} · Tax ${fmt(t.tax||0)}</div></div>`).join('')}
+function renderHistory(){const e=document.getElementById('history-list');if(!data.history.length){e.innerHTML='<div class="empty" style="padding:10px">no completed trips yet.</div>';return}e.innerHTML=data.history.slice(0,10).map(t=>`<div class="trip-row"><div class="trip-main"><span>${escapeHtml(STORE_NAMES[t.store]||'Store')}</span><span>${fmt(t.total)}</span></div><div class="trip-sub">${new Date(t.date).toLocaleDateString()} · EBT ${fmt(t.ebteligible||0)} · non-ebt ${fmt(t.nonEbt||0)}${t.unknown?` · uncertain ${fmt(t.unknown)}`:''} · tax ${fmt(t.tax||0)}</div></div>`).join('')}
 function attachSwipeHandlers(){document.querySelectorAll('.item[data-id]').forEach(el=>{const id=parseInt(el.dataset.id,10);let sx=0,dx=0,drag=false;el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;dx=0;drag=true;el.style.transition='none'},{passive:true});el.addEventListener('touchmove',e=>{if(!drag)return;dx=e.touches[0].clientX-sx;if(dx>0)dx=0;if(dx<-110)dx=-110;el.style.transform=`translateX(${dx}px)`},{passive:true});el.addEventListener('touchend',()=>{drag=false;el.style.transition='transform .15s ease';if(dx<-70)deleteItem(id);else el.style.transform='translateX(0)';dx=0})})}
 document.getElementById('in-name').addEventListener('input',e=>showSuggestions(e.target.value));document.getElementById('in-name').addEventListener('blur',()=>setTimeout(hideSuggestions,120));document.getElementById('in-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('in-price').focus()});document.getElementById('in-price').addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveData()});window.addEventListener('pagehide',saveData);init();
 </script>

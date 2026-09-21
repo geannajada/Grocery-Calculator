@@ -1,6 +1,6 @@
 {
-  "name": "Grocery Cart Calculator",
-  "short_name": "Grocery Cart",
+  "name": "grocery cart calculator",
+  "short_name": "grocery cart",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
