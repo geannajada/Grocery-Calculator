@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2a3d36">
-<title>Grocery Cart Calculator</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grocery Cart">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Grocery Cart</title>
 <style>
 :root{
   --bg:#fdf8f2;
@@ -139,6 +144,36 @@ input::placeholder{color:#b7b0a6}
   .toggle-button{font-size:10px}
   .sum-grid{gap:3px 8px}
 }
+
+/* v3: iPhone-first controls + category classification */
+html{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif;padding-bottom:230px}
+.wrap{padding-top:calc(16px + env(safe-area-inset-top));}
+button{min-height:44px;touch-action:manipulation}
+.tab{min-height:54px;border-radius:11px}
+.card{border-radius:12px}
+.entry-controls{grid-template-columns:104px minmax(0,1fr);align-items:stretch}
+.category-select{width:100%;min-height:36px;border:0;background:#fff;color:var(--ink);font-size:13px;padding:6px 28px 6px 7px}
+.status-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-2px 0 9px}
+.status-pill{border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:10px;font-weight:700;color:var(--ink-soft);background:#f8f6f2}
+.status-pill.good{background:var(--accent-soft);border-color:#afd4c3;color:var(--accent-dark)}
+.status-pill.tax{background:var(--gold-soft);border-color:#e2c794;color:#775015}
+.status-pill.unknown{background:var(--warn-soft);border-color:#efbea9;color:#8d3b22}
+.override-btn{margin-left:auto;border:0;background:transparent;color:var(--accent);font-size:11px;font-weight:700;padding:4px 2px;min-height:32px}
+.override-panel{display:none;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 9px}
+.override-panel.show{display:grid}
+.override-group .control-label{margin-bottom:4px}
+.override-group>div{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.override-choice{border:1px solid var(--line);background:#fff;border-radius:7px;font-size:10px;font-weight:700;color:var(--ink-soft);padding:6px;min-height:38px}
+.override-choice.on{background:var(--accent-soft);border-color:#afd4c3;color:var(--accent-dark)}
+.override-choice.tax-on{background:var(--gold-soft);border-color:#e2c794;color:#775015}
+.category-note{font-size:10px;line-height:1.35;color:var(--ink-soft);margin:7px 1px 0}
+.item-meta{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0}
+.item-sub{margin-top:0}
+.summary{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.undo-toast{top:calc(14px + env(safe-area-inset-top))}
+@media(max-width:390px){.entry-controls{grid-template-columns:96px minmax(0,1fr)}.sum-grid{gap:3px 7px}}
+
 </style>
 </head>
 <body>
@@ -214,16 +249,22 @@ input::placeholder{color:#b7b0a6}
         </div>
       </div>
       <div class="control-box">
-        <div class="control-label">Payment</div>
-        <button id="draft-ebt" class="toggle-button on" onclick="toggleDraftEBT()">EBT eligible</button>
-      </div>
-      <div class="control-box">
-        <div class="control-label">Sales tax</div>
-        <button id="draft-tax" class="toggle-button tax" onclick="toggleDraftTax()">Tax exempt</button>
+        <div class="control-label">Category</div>
+        <select id="draft-category" class="category-select" onchange="categoryChanged()">
+          <option value="food">Food / groceries</option><option value="produce">Produce</option><option value="meat">Meat / seafood</option><option value="dairy">Dairy / eggs</option><option value="snack">Snack / candy</option><option value="drink">Noncarbonated drink</option><option value="soda">Soda / carbonated</option><option value="hot">Hot prepared food</option><option value="household">Household</option><option value="personal">Personal care</option><option value="pet">Pet food / supplies</option><option value="supplement">Vitamin / supplement</option><option value="medicine">Medicine</option><option value="alcohol">Alcohol</option><option value="unknown">Unsure</option>
+        </select>
       </div>
     </div>
-
+    <div class="status-row">
+      <span id="status-ebt" class="status-pill good">EBT eligible</span><span id="status-tax" class="status-pill good">Tax exempt</span>
+      <button class="override-btn" onclick="toggleOverrides()">Override</button>
+    </div>
+    <div id="override-panel" class="override-panel">
+      <div class="override-group"><div class="control-label">EBT override</div><div><button id="ov-ebt-yes" class="override-choice" onclick="setEbtOverride(true)">Eligible</button><button id="ov-ebt-no" class="override-choice" onclick="setEbtOverride(false)">Not EBT</button></div></div>
+      <div class="override-group"><div class="control-label">Tax override</div><div><button id="ov-tax-no" class="override-choice" onclick="setTaxOverride(false)">Exempt</button><button id="ov-tax-yes" class="override-choice" onclick="setTaxOverride(true)">Taxable</button></div></div>
+    </div>
     <button class="add-btn" onclick="addItem()">Add to cart</button>
+    <div class="category-note" id="category-note">Regular grocery food defaults to EBT eligible and California sales-tax exempt. You can override either status.</div>
   </div>
 
   <div class="list-header">
@@ -274,7 +315,7 @@ input::placeholder{color:#b7b0a6}
     <div class="sum-grid">
       <div class="sum-row"><span>EBT eligible</span><span id="sum-ebt">$0.00</span></div>
       <div class="sum-row"><span>Non-EBT</span><span id="sum-nonebt">$0.00</span></div>
-      <div class="sum-row"><span>Taxable subtotal</span><span id="sum-taxable">$0.00</span></div>
+      <div class="sum-row"><span>Uncertain</span><span id="sum-unknown">$0.00</span></div>
       <div class="sum-row"><span id="sum-tax-label">Tax</span><span id="sum-tax">$0.00</span></div>
     </div>
     <div class="sum-total">
@@ -289,448 +330,81 @@ input::placeholder{color:#b7b0a6}
 </div>
 
 <script>
-const STORAGE_KEY = 'grocery-cart-calculator-v2';
-const DEFAULT_DATA = {
-  version: 2,
-  currentTab: 'costco',
-  rates: { costco: 0.0925, walmart: 0.0775, other: 0.0875 },
-  settings: { ebtBalance: '', tripBudget: '' },
-  carts: { costco: [], walmart: [], other: [] },
-  knownItems: { costco: [], walmart: [], other: [] },
-  history: [],
-  nextId: 1
+const STORAGE_KEY='grocery-cart-calculator-v3', OLD_KEY='grocery-cart-calculator-v2';
+const STORE_NAMES={costco:'Costco Vallejo',walmart:'Walmart American Canyon',other:'Other location'};
+const CATEGORY={
+ food:{label:'Food / groceries',ebt:true,taxable:false,note:'Regular grocery food defaults to EBT eligible and California sales-tax exempt.'},
+ produce:{label:'Produce',ebt:true,taxable:false,note:'Produce defaults to EBT eligible and sales-tax exempt.'},
+ meat:{label:'Meat / seafood',ebt:true,taxable:false,note:'Meat and seafood for home preparation default to EBT eligible and sales-tax exempt.'},
+ dairy:{label:'Dairy / eggs',ebt:true,taxable:false,note:'Dairy and eggs default to EBT eligible and sales-tax exempt.'},
+ snack:{label:'Snack / candy',ebt:true,taxable:false,note:'Ordinary snacks and candy default to EBT eligible and sales-tax exempt in California.'},
+ drink:{label:'Noncarbonated drink',ebt:true,taxable:false,note:'Ordinary noncarbonated food beverages default to EBT eligible and sales-tax exempt.'},
+ soda:{label:'Soda / carbonated',ebt:true,taxable:true,note:'Carbonated beverages default to EBT eligible but taxable in California.'},
+ hot:{label:'Hot prepared food',ebt:false,taxable:true,note:'Hot prepared food defaults to not EBT eligible and taxable.'},
+ household:{label:'Household',ebt:false,taxable:true,note:'Household goods default to not EBT eligible and taxable.'},
+ personal:{label:'Personal care',ebt:false,taxable:true,note:'Personal-care items default to not EBT eligible and taxable.'},
+ pet:{label:'Pet food / supplies',ebt:false,taxable:true,note:'Pet food and pet supplies default to not EBT eligible and taxable.'},
+ supplement:{label:'Vitamin / supplement',ebt:false,taxable:true,note:'Dietary supplements default to not EBT eligible and taxable.'},
+ medicine:{label:'Medicine',ebt:false,taxable:true,note:'Over-the-counter medicine defaults to not EBT eligible and taxable.'},
+ alcohol:{label:'Alcohol',ebt:false,taxable:true,note:'Alcohol defaults to not EBT eligible and taxable.'},
+ unknown:{label:'Unsure',ebt:null,taxable:null,note:'Uncertain items stay separate from EBT totals and are assumed taxable in the grand total for conservative budgeting.'},
+ custom:{label:'Saved / custom',ebt:null,taxable:null,note:'This previously saved item keeps its existing EBT and tax settings.'}
 };
-const STORE_NAMES = {
-  costco: 'Costco Vallejo',
-  walmart: 'Walmart American Canyon',
-  other: 'Other location'
-};
-
-let data = structuredCloneSafe(DEFAULT_DATA);
-let draftEBT = true;
-let draftTaxable = false;
-let currentMatches = [];
-let undoSnapshot = null;
-let undoTimeout = null;
-
-function structuredCloneSafe(obj){ return JSON.parse(JSON.stringify(obj)); }
-function fmt(n){ return '$' + (Number(n || 0)).toFixed(2); }
-function num(v){ const n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = String(str ?? '');
-  return div.innerHTML;
-}
-
+const DEFAULT_DATA={version:3,currentTab:'costco',rates:{costco:.0925,walmart:.0775,other:.0875},settings:{ebtBalance:'',tripBudget:''},carts:{costco:[],walmart:[],other:[]},knownItems:{costco:[],walmart:[],other:[]},history:[],nextId:1};
+let data=clone(DEFAULT_DATA),draftEbtOverride=null,draftTaxOverride=null,currentMatches=[],undoSnapshot=null,undoTimeout=null;
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function fmt(x){return '$'+Number(x||0).toFixed(2)}
+function num(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+function escapeHtml(str){const d=document.createElement('div');d.textContent=String(str??'');return d.innerHTML}
+function currentCart(){return data.carts[data.currentTab]}
+function safeCat(c){return CATEGORY[c]?c:'custom'}
 function loadData(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const saved = JSON.parse(raw);
-      data = {
-        ...structuredCloneSafe(DEFAULT_DATA),
-        ...saved,
-        rates: {...DEFAULT_DATA.rates, ...(saved.rates || {})},
-        settings: {...DEFAULT_DATA.settings, ...(saved.settings || {})},
-        carts: {...DEFAULT_DATA.carts, ...(saved.carts || {})},
-        knownItems: {...DEFAULT_DATA.knownItems, ...(saved.knownItems || {})},
-        history: Array.isArray(saved.history) ? saved.history : []
-      };
-    }
-  }catch(e){
-    data = structuredCloneSafe(DEFAULT_DATA);
-  }
+ try{
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(raw){data={...clone(DEFAULT_DATA),...JSON.parse(raw)};return}
+  const old=localStorage.getItem(OLD_KEY);
+  if(old){const v=JSON.parse(old);data={...clone(DEFAULT_DATA),...v,version:3,rates:{...DEFAULT_DATA.rates,...(v.rates||{})},settings:{...DEFAULT_DATA.settings,...(v.settings||{})},carts:{...DEFAULT_DATA.carts,...(v.carts||{})},knownItems:{...DEFAULT_DATA.knownItems,...(v.knownItems||{})},history:Array.isArray(v.history)?v.history:[]};['costco','walmart','other'].forEach(store=>{data.carts[store]=(data.carts[store]||[]).map(i=>({...i,category:i.category||'custom'}));data.knownItems[store]=(data.knownItems[store]||[]).map(i=>({...i,category:i.category||'custom'}))});saveData();}
+ }catch(e){data=clone(DEFAULT_DATA)}
 }
-function saveData(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    return true;
-  }catch(e){
-    document.querySelector('.autosave').innerHTML = '<strong style="color:#d1481f">Could not save</strong><br>Browser storage may be unavailable';
-    return false;
-  }
-}
-function saveSettingsAndRender(){
-  data.settings.ebtBalance = document.getElementById('ebt-balance').value;
-  data.settings.tripBudget = document.getElementById('trip-budget').value;
-  saveData();
-  renderSummary();
-}
-function updateOtherRate(){
-  const pct = Math.max(0, num(document.getElementById('other-rate').value));
-  data.rates.other = pct / 100;
-  document.getElementById('other-tab-rate').textContent = pct.toFixed(2) + '%';
-  saveData();
-  renderSummary();
-}
-function init(){
-  loadData();
-  document.getElementById('ebt-balance').value = data.settings.ebtBalance ?? '';
-  document.getElementById('trip-budget').value = data.settings.tripBudget ?? '';
-  document.getElementById('other-rate').value = (data.rates.other * 100).toFixed(2);
-  document.getElementById('other-tab-rate').textContent = (data.rates.other * 100).toFixed(2) + '%';
-  switchTab(data.currentTab || 'costco', false);
-  renderHistory();
-}
-function currentCart(){ return data.carts[data.currentTab]; }
-
-function switchTab(tab, persist=true){
-  data.currentTab = tab;
-  ['costco','walmart','other'].forEach(t => document.getElementById('tab-'+t).classList.toggle('active', t===tab));
-  document.getElementById('other-rate-row').classList.toggle('show', tab==='other');
-  if(persist) saveData();
-  resetDraft();
-  render();
-}
-function resetDraft(){
-  document.getElementById('in-name').value = '';
-  document.getElementById('in-price').value = '';
-  document.getElementById('draft-qty').value = 1;
-  draftEBT = true;
-  draftTaxable = false;
-  syncDraftButtons();
-  hideSuggestions();
-}
-function syncDraftButtons(){
-  const e = document.getElementById('draft-ebt');
-  const t = document.getElementById('draft-tax');
-  e.classList.toggle('on', draftEBT);
-  e.textContent = draftEBT ? 'EBT eligible' : 'Not EBT';
-  t.classList.toggle('on', draftTaxable);
-  t.textContent = draftTaxable ? 'Taxable' : 'Tax exempt';
-}
-function toggleDraftEBT(){ draftEBT = !draftEBT; syncDraftButtons(); }
-function toggleDraftTax(){ draftTaxable = !draftTaxable; syncDraftButtons(); }
-function adjustDraftQty(delta){
-  const el = document.getElementById('draft-qty');
-  el.value = Math.max(1, Math.round(num(el.value) || 1) + delta);
-}
-
-function storeKnownItem(item){
-  const list = data.knownItems[data.currentTab];
-  const idx = list.findIndex(k => k.name.toLowerCase() === item.name.toLowerCase());
-  const entry = {
-    name: item.name, price: item.price, ebt: item.ebt, taxable: item.taxable,
-    lastUsed: Date.now(), uses: idx >= 0 ? (list[idx].uses || 0) + 1 : 1
-  };
-  if(idx >= 0) list.splice(idx,1);
-  list.unshift(entry);
-  data.knownItems[data.currentTab] = list.slice(0,80);
-}
-
-function addItem(){
-  const nameEl = document.getElementById('in-name');
-  const priceEl = document.getElementById('in-price');
-  const qtyEl = document.getElementById('draft-qty');
-  const name = nameEl.value.trim();
-  const price = parseFloat(priceEl.value);
-  const qty = Math.max(1, Math.round(num(qtyEl.value) || 1));
-  if(!name){ nameEl.focus(); return; }
-  if(!Number.isFinite(price) || price < 0){ priceEl.focus(); return; }
-
-  pushUndo('Item added');
-  const item = { id:data.nextId++, name, price, qty, ebt:draftEBT, taxable:draftTaxable };
-  currentCart().push(item);
-  storeKnownItem(item);
-  saveData();
-  resetDraft();
-  render();
-  nameEl.focus();
-}
-function updateItemPrice(id, value){
-  const item = currentCart().find(i => i.id === id);
-  if(!item) return;
-  const price = parseFloat(value);
-  if(!Number.isFinite(price) || price < 0) return;
-  item.price = price;
-  storeKnownItem(item);
-  saveData();
-  renderSummary();
-}
-function updateQty(id, value){
-  const item = currentCart().find(i => i.id === id);
-  if(!item) return;
-  item.qty = Math.max(1, Math.round(num(value) || 1));
-  saveData();
-  render();
-}
-function changeQty(id, delta){
-  const item = currentCart().find(i => i.id === id);
-  if(!item) return;
-  item.qty = Math.max(1, item.qty + delta);
-  saveData();
-  render();
-}
-function toggleItemEBT(id){
-  const item = currentCart().find(i => i.id === id);
-  if(!item) return;
-  item.ebt = !item.ebt;
-  storeKnownItem(item);
-  saveData();
-  render();
-}
-function toggleItemTax(id){
-  const item = currentCart().find(i => i.id === id);
-  if(!item) return;
-  item.taxable = !item.taxable;
-  storeKnownItem(item);
-  saveData();
-  render();
-}
-function deleteItem(id){
-  pushUndo('Item removed');
-  data.carts[data.currentTab] = currentCart().filter(i => i.id !== id);
-  saveData();
-  render();
-}
-
-function showSuggestions(query){
-  const box = document.getElementById('suggestions');
-  const q = query.trim().toLowerCase();
-  if(!q){ hideSuggestions(); return; }
-  currentMatches = data.knownItems[data.currentTab]
-    .filter(k => k.name.toLowerCase().includes(q))
-    .slice(0,6);
-  if(!currentMatches.length){ hideSuggestions(); return; }
-  box.innerHTML = currentMatches.map((k,i) => `
-    <div class="suggestion-item" onmousedown="selectSuggestion(${i})">
-      <span>${escapeHtml(k.name)}</span>
-      <span class="suggestion-meta">${fmt(k.price)} · ${k.ebt ? 'EBT' : 'non-EBT'}</span>
-    </div>`).join('');
-  box.style.display = 'block';
-}
-function hideSuggestions(){
-  const box = document.getElementById('suggestions');
-  box.style.display='none';
-  box.innerHTML='';
-  currentMatches=[];
-}
-function selectSuggestion(i){
-  const k = currentMatches[i];
-  if(!k) return;
-  document.getElementById('in-name').value = k.name;
-  document.getElementById('in-price').value = Number(k.price).toFixed(2);
-  draftEBT = !!k.ebt;
-  draftTaxable = !!k.taxable;
-  syncDraftButtons();
-  hideSuggestions();
-  document.getElementById('in-price').focus();
-}
-function quickAddKnown(index){
-  const k = data.knownItems[data.currentTab][index];
-  if(!k) return;
-  document.getElementById('in-name').value = k.name;
-  document.getElementById('in-price').value = Number(k.price).toFixed(2);
-  document.getElementById('draft-qty').value = 1;
-  draftEBT = !!k.ebt;
-  draftTaxable = !!k.taxable;
-  syncDraftButtons();
-  document.getElementById('in-price').focus();
-}
-
-function cartMath(){
-  const list = currentCart();
-  const merchandise = list.reduce((s,i)=>s+i.price*i.qty,0);
-  const ebtEligible = list.filter(i=>i.ebt).reduce((s,i)=>s+i.price*i.qty,0);
-  const nonEbt = list.filter(i=>!i.ebt).reduce((s,i)=>s+i.price*i.qty,0);
-  const taxableSubtotal = list.filter(i=>i.taxable).reduce((s,i)=>s+i.price*i.qty,0);
-  const tax = taxableSubtotal * data.rates[data.currentTab];
-  const total = merchandise + tax;
-  return {merchandise, ebtEligible, nonEbt, taxableSubtotal, tax, total};
-}
-function render(){
-  renderRecent();
-  renderItems();
-  renderSummary();
-}
-function renderRecent(){
-  const list = data.knownItems[data.currentTab].slice(0,8);
-  const wrap = document.getElementById('recent-wrap');
-  const el = document.getElementById('recent-items');
-  if(!list.length){
-    wrap.style.display='none';
-    return;
-  }
-  wrap.style.display='';
-  el.innerHTML = list.map((k,i)=>`
-    <button class="recent-chip" onclick="quickAddKnown(${i})">${escapeHtml(k.name)}<span class="chip-price">${fmt(k.price)}</span></button>
-  `).join('');
-}
-function renderItems(){
-  const list = currentCart();
-  const el = document.getElementById('item-list');
-  if(!list.length){
-    el.innerHTML='<div class="empty">Cart is empty. Add an item above.</div>';
-    return;
-  }
-  el.innerHTML = list.map(item => `
-    <div class="item-wrap">
-      <div class="item-delete-bg">Remove</div>
-      <div class="item" data-id="${item.id}">
-        <div class="item-top">
-          <div class="item-name">${escapeHtml(item.name)}</div>
-          <div class="item-total">${fmt(item.price*item.qty)}</div>
-          <button class="icon-btn" aria-label="Delete" onclick="deleteItem(${item.id})">&times;</button>
-        </div>
-        <div class="item-sub">
-          <div class="item-price">
-            <span>$</span>
-            <input class="inline-price" type="number" min="0" step="0.01" inputmode="decimal"
-              value="${Number(item.price).toFixed(2)}"
-              onchange="updateItemPrice(${item.id}, this.value)">
-            <span>ea</span>
-          </div>
-          <div class="item-controls">
-            <button class="mini-pill ${item.ebt?'on':''}" onclick="toggleItemEBT(${item.id})">${item.ebt?'EBT':'Non-EBT'}</button>
-            <button class="mini-pill tax ${item.taxable?'on':''}" onclick="toggleItemTax(${item.id})">${item.taxable?'Taxable':'Exempt'}</button>
-            <div class="mini-qty">
-              <button onclick="changeQty(${item.id},-1)">−</button>
-              <input type="number" min="1" step="1" inputmode="numeric" value="${item.qty}" onchange="updateQty(${item.id},this.value)">
-              <button onclick="changeQty(${item.id},1)">+</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join('');
-  attachSwipeHandlers();
-}
-function renderSummary(){
-  const m = cartMath();
-  const rate = data.rates[data.currentTab];
-  document.getElementById('sum-ebt').textContent = fmt(m.ebtEligible);
-  document.getElementById('sum-nonebt').textContent = fmt(m.nonEbt);
-  document.getElementById('sum-taxable').textContent = fmt(m.taxableSubtotal);
-  document.getElementById('sum-tax-label').textContent = `Tax (${(rate*100).toFixed(2)}%)`;
-  document.getElementById('sum-tax').textContent = fmt(m.tax);
-  document.getElementById('sum-total').textContent = fmt(m.total);
-  const itemCount = currentCart().reduce((s,i)=>s+i.qty,0);
-  document.getElementById('sum-note').textContent = `${STORE_NAMES[data.currentTab]} · ${itemCount} item${itemCount===1?'':'s'}`;
-
-  const ebtBalRaw = data.settings.ebtBalance;
-  const hasEbt = ebtBalRaw !== '' && ebtBalRaw !== null;
-  const ebtRemaining = num(ebtBalRaw) - m.ebtEligible;
-  const ebtEl = document.getElementById('ebt-rem');
-  const ebtBox = document.getElementById('ebt-rem-box');
-  ebtEl.textContent = hasEbt ? fmt(ebtRemaining) : 'Not set';
-  ebtBox.classList.toggle('warn', hasEbt && ebtRemaining < 0);
-
-  const budgetRaw = data.settings.tripBudget;
-  const hasBudget = budgetRaw !== '' && budgetRaw !== null;
-  const budgetRemaining = num(budgetRaw) - m.total;
-  const budEl = document.getElementById('budget-rem');
-  const budBox = document.getElementById('budget-rem-box');
-  budEl.textContent = hasBudget ? fmt(budgetRemaining) : 'Not set';
-  budBox.classList.toggle('warn', hasBudget && budgetRemaining < 0);
-}
-
-function pushUndo(label){
-  undoSnapshot = structuredCloneSafe(data);
-  const toast = document.getElementById('undo-toast');
-  document.getElementById('undo-text').textContent = label;
-  toast.style.display='flex';
-  clearTimeout(undoTimeout);
-  undoTimeout=setTimeout(()=>{toast.style.display='none';undoSnapshot=null},5000);
-}
-function performUndo(){
-  if(!undoSnapshot) return;
-  data = undoSnapshot;
-  undoSnapshot = null;
-  clearTimeout(undoTimeout);
-  document.getElementById('undo-toast').style.display='none';
-  saveData();
-  document.getElementById('ebt-balance').value = data.settings.ebtBalance ?? '';
-  document.getElementById('trip-budget').value = data.settings.tripBudget ?? '';
-  render();
-}
-function requestClearCart(){
-  if(!currentCart().length) return;
-  document.getElementById('clear-modal').style.display='flex';
-}
-function closeModal(id){ document.getElementById(id).style.display='none'; }
-function confirmClearCart(){
-  pushUndo('Cart cleared');
-  data.carts[data.currentTab]=[];
-  saveData();
-  render();
-  closeModal('clear-modal');
-}
-function requestFinishTrip(){
-  if(!currentCart().length) return;
-  document.getElementById('finish-modal').style.display='flex';
-}
-function confirmFinishTrip(){
-  const m = cartMath();
-  data.history.unshift({
-    id: Date.now(),
-    store: data.currentTab,
-    date: new Date().toISOString(),
-    total: m.total,
-    ebtEligible: m.ebtEligible,
-    nonEbt: m.nonEbt,
-    tax: m.tax,
-    lineCount: currentCart().length
-  });
-  data.history = data.history.slice(0,20);
-  data.carts[data.currentTab]=[];
-  saveData();
-  render();
-  renderHistory();
-  closeModal('finish-modal');
-}
-function toggleHistory(){
-  const card=document.getElementById('history-card');
-  card.classList.toggle('show');
-  renderHistory();
-}
-function renderHistory(){
-  const el=document.getElementById('history-list');
-  if(!data.history.length){
-    el.innerHTML='<div class="empty" style="padding:10px">No completed trips yet.</div>';
-    return;
-  }
-  el.innerHTML=data.history.slice(0,10).map(t=>{
-    const d=new Date(t.date);
-    return `<div class="trip-row">
-      <div class="trip-main"><span>${escapeHtml(STORE_NAMES[t.store]||'Store')}</span><span>${fmt(t.total)}</span></div>
-      <div class="trip-sub">${d.toLocaleDateString()} · EBT ${fmt(t.ebtEligible)} · Non-EBT ${fmt(t.nonEbt)} · Tax ${fmt(t.tax)}</div>
-    </div>`;
-  }).join('');
-}
-
-function attachSwipeHandlers(){
-  document.querySelectorAll('.item[data-id]').forEach(el=>{
-    const id=parseInt(el.dataset.id,10);
-    let startX=0,dx=0,dragging=false;
-    el.addEventListener('touchstart',e=>{
-      startX=e.touches[0].clientX;dx=0;dragging=true;el.style.transition='none';
-    },{passive:true});
-    el.addEventListener('touchmove',e=>{
-      if(!dragging)return;
-      dx=e.touches[0].clientX-startX;
-      if(dx>0)dx=0;
-      if(dx<-110)dx=-110;
-      el.style.transform=`translateX(${dx}px)`;
-    },{passive:true});
-    el.addEventListener('touchend',()=>{
-      dragging=false;el.style.transition='transform .15s ease';
-      if(dx<-70) deleteItem(id);
-      else el.style.transform='translateX(0)';
-      dx=0;
-    });
-  });
-}
-
-document.getElementById('in-name').addEventListener('input',e=>showSuggestions(e.target.value));
-document.getElementById('in-name').addEventListener('blur',()=>setTimeout(hideSuggestions,120));
-document.getElementById('in-name').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('in-price').focus(); });
-document.getElementById('in-price').addEventListener('keydown',e=>{ if(e.key==='Enter') addItem(); });
-
-// Save again when the page is backgrounded/closed. Most changes are already saved immediately.
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') saveData(); });
-window.addEventListener('pagehide',saveData);
-
-init();
+function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));return true}catch(e){document.querySelector('.autosave').innerHTML='<strong style="color:#d1481f">Could not save</strong><br>Browser storage unavailable';return false}}
+function saveSettingsAndRender(){data.settings.ebtBalance=document.getElementById('ebt-balance').value;data.settings.tripBudget=document.getElementById('trip-budget').value;saveData();renderSummary()}
+function updateOtherRate(){const p=Math.max(0,num(document.getElementById('other-rate').value));data.rates.other=p/100;document.getElementById('other-tab-rate').textContent=p.toFixed(2)+'%';saveData();renderSummary()}
+function init(){loadData();document.getElementById('ebt-balance').value=data.settings.ebtBalance??'';document.getElementById('trip-budget').value=data.settings.tripBudget??'';document.getElementById('other-rate').value=(data.rates.other*100).toFixed(2);document.getElementById('other-tab-rate').textContent=(data.rates.other*100).toFixed(2)+'%';switchTab(data.currentTab||'costco',false);renderHistory();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+function switchTab(tab,persist=true){data.currentTab=tab;['costco','walmart','other'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tab));document.getElementById('other-rate-row').classList.toggle('show',tab==='other');if(persist)saveData();resetDraft();render()}
+function resetDraft(){document.getElementById('in-name').value='';document.getElementById('in-price').value='';document.getElementById('draft-qty').value=1;document.getElementById('draft-category').value='food';draftEbtOverride=null;draftTaxOverride=null;document.getElementById('override-panel').classList.remove('show');syncDraftStatus();hideSuggestions()}
+function draftState(){const c=CATEGORY[document.getElementById('draft-category').value]||CATEGORY.food;return{cat:c,ebt:draftEbtOverride!==null?draftEbtOverride:c.ebt,taxable:draftTaxOverride!==null?draftTaxOverride:c.taxable}}
+function categoryChanged(){draftEbtOverride=null;draftTaxOverride=null;syncDraftStatus()}
+function syncDraftStatus(){const d=draftState(),e=document.getElementById('status-ebt'),t=document.getElementById('status-tax');e.textContent=d.ebt===null?'EBT unknown':d.ebt?'EBT eligible':'Not EBT';e.className='status-pill '+(d.ebt===null?'unknown':d.ebt?'good':'unknown');t.textContent=d.taxable===null?'Tax unknown':d.taxable?'Taxable':'Tax exempt';t.className='status-pill '+(d.taxable===null?'unknown':d.taxable?'tax':'good');document.getElementById('category-note').textContent=d.cat.note+' You can override either status.';document.getElementById('ov-ebt-yes').classList.toggle('on',draftEbtOverride===true);document.getElementById('ov-ebt-no').classList.toggle('on',draftEbtOverride===false);document.getElementById('ov-tax-no').classList.toggle('on',draftTaxOverride===false);document.getElementById('ov-tax-yes').classList.toggle('tax-on',draftTaxOverride===true)}
+function toggleOverrides(){document.getElementById('override-panel').classList.toggle('show')}
+function setEbtOverride(v){draftEbtOverride=draftEbtOverride===v?null:v;syncDraftStatus()}
+function setTaxOverride(v){draftTaxOverride=draftTaxOverride===v?null:v;syncDraftStatus()}
+function adjustDraftQty(delta){const e=document.getElementById('draft-qty');e.value=Math.max(1,Math.round(num(e.value)||1)+delta)}
+function storeKnownItem(item){const list=data.knownItems[data.currentTab]||[],idx=list.findIndex(k=>k.name.toLowerCase()===item.name.toLowerCase());const entry={name:item.name,price:item.price,category:item.category,ebt:item.ebt,taxable:item.taxable,lastUsed:Date.now(),uses:idx>=0?(list[idx].uses||0)+1:1};if(idx>=0)list.splice(idx,1);list.unshift(entry);data.knownItems[data.currentTab]=list.slice(0,80)}
+function addItem(){const nameEl=document.getElementById('in-name'),priceEl=document.getElementById('in-price'),name=nameEl.value.trim(),price=parseFloat(priceEl.value),qty=Math.max(1,Math.round(num(document.getElementById('draft-qty').value)||1));if(!name){nameEl.focus();return}if(!Number.isFinite(price)||price<0){priceEl.focus();return}pushUndo('Item added');const d=draftState(),item={id:data.nextId++,name,price,qty,category:document.getElementById('draft-category').value,ebt:d.ebt,taxable:d.taxable};currentCart().push(item);storeKnownItem(item);saveData();resetDraft();render();nameEl.focus()}
+function updateItemPrice(id,value){const i=currentCart().find(x=>x.id===id),p=parseFloat(value);if(!i||!Number.isFinite(p)||p<0)return;i.price=p;storeKnownItem(i);saveData();renderSummary()}
+function updateQty(id,value){const i=currentCart().find(x=>x.id===id);if(!i)return;i.qty=Math.max(1,Math.round(num(value)||1));saveData();render()}
+function changeQty(id,delta){const i=currentCart().find(x=>x.id===id);if(!i)return;i.qty=Math.max(1,i.qty+delta);saveData();render()}
+function deleteItem(id){pushUndo('Item removed');data.carts[data.currentTab]=currentCart().filter(x=>x.id!==id);saveData();render()}
+function showSuggestions(q){const b=document.getElementById('suggestions'),s=q.trim().toLowerCase();if(!s){hideSuggestions();return}currentMatches=(data.knownItems[data.currentTab]||[]).filter(k=>k.name.toLowerCase().includes(s)).slice(0,6);if(!currentMatches.length){hideSuggestions();return}b.innerHTML=currentMatches.map((k,i)=>`<div class="suggestion-item" onmousedown="selectSuggestion(${i})"><span>${escapeHtml(k.name)}</span><span class="suggestion-meta">${fmt(k.price)} · ${escapeHtml((CATEGORY[safeCat(k.category)]||CATEGORY.custom).label)}</span></div>`).join('');b.style.display='block'}
+function hideSuggestions(){const b=document.getElementById('suggestions');b.style.display='none';b.innerHTML='';currentMatches=[]}
+function applyKnown(k){document.getElementById('in-name').value=k.name;document.getElementById('in-price').value=Number(k.price).toFixed(2);const cat=CATEGORY[k.category]?k.category:'food';document.getElementById('draft-category').value=cat;const base=CATEGORY[cat];draftEbtOverride=k.ebt===base.ebt?null:k.ebt;draftTaxOverride=k.taxable===base.taxable?null:k.taxable;syncDraftStatus();document.getElementById('in-price').focus()}
+function selectSuggestion(i){const k=currentMatches[i];if(k)applyKnown(k);hideSuggestions()}
+function quickAddKnown(i){const k=(data.knownItems[data.currentTab]||[])[i];if(k)applyKnown(k)}
+function cartMath(){let merchandise=0,ebtEligible=0,nonEbt=0,unknown=0,taxable=0,unknownTax=0;currentCart().forEach(i=>{const x=i.price*i.qty;merchandise+=x;if(i.ebt===null)unknown+=x;else if(i.ebt)ebtEligible+=x;else nonEbt+=x;if(i.taxable===true)taxable+=x;else if(i.taxable===null)unknownTax+=x});const rate=data.rates[data.currentTab],tax=(taxable+unknownTax)*rate,total=merchandise+tax;return{merchandise,ebtEligible,nonEbt,unknown,taxableSubtotal:taxable,unknownTax,tax,total}}
+function render(){renderRecent();renderItems();renderSummary()}
+function renderRecent(){const list=(data.knownItems[data.currentTab]||[]).slice(0,8),w=document.getElementById('recent-wrap'),e=document.getElementById('recent-items');if(!list.length){w.style.display='none';return}w.style.display='';e.innerHTML=list.map((k,i)=>`<button class="recent-chip" onclick="quickAddKnown(${i})">${escapeHtml(k.name)}<span class="chip-price">${fmt(k.price)}</span></button>`).join('')}
+function pill(v,type){if(type==='ebt'){if(v===null)return'<span class="status-pill unknown">EBT ?</span>';return `<span class="status-pill ${v?'good':'unknown'}">${v?'EBT':'Non-EBT'}</span>`}if(v===null)return'<span class="status-pill unknown">Tax ?</span>';return `<span class="status-pill ${v?'tax':'good'}">${v?'Taxable':'Exempt'}</span>`}
+function renderItems(){const list=currentCart(),e=document.getElementById('item-list');if(!list.length){e.innerHTML='<div class="empty">Cart is empty. Add an item above.</div>';return}e.innerHTML=list.map(i=>`<div class="item-wrap"><div class="item-delete-bg">Remove</div><div class="item" data-id="${i.id}"><div class="item-top"><div class="item-name">${escapeHtml(i.name)}</div><div class="item-total">${fmt(i.price*i.qty)}</div><button class="icon-btn" aria-label="Delete" onclick="deleteItem(${i.id})">&times;</button></div><div class="item-meta"><span class="status-pill">${escapeHtml((CATEGORY[safeCat(i.category)]||CATEGORY.custom).label)}</span>${pill(i.ebt,'ebt')}${pill(i.taxable,'tax')}</div><div class="item-sub"><div class="item-price"><span>$</span><input class="inline-price" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(i.price).toFixed(2)}" onchange="updateItemPrice(${i.id},this.value)"><span>ea</span></div><div class="item-controls"><div class="mini-qty"><button onclick="changeQty(${i.id},-1)">−</button><input type="number" min="1" step="1" inputmode="numeric" value="${i.qty}" onchange="updateQty(${i.id},this.value)"><button onclick="changeQty(${i.id},1)">+</button></div></div></div></div></div>`).join('');attachSwipeHandlers()}
+function renderSummary(){const m=cartMath(),rate=data.rates[data.currentTab];document.getElementById('sum-ebt').textContent=fmt(m.ebtEligible);document.getElementById('sum-nonebt').textContent=fmt(m.nonEbt);document.getElementById('sum-unknown').textContent=fmt(m.unknown);document.getElementById('sum-tax-label').textContent=`Tax (${(rate*100).toFixed(2)}%)`;document.getElementById('sum-tax').textContent=fmt(m.tax);document.getElementById('sum-total').textContent=fmt(m.total);const count=currentCart().reduce((s,i)=>s+i.qty,0);document.getElementById('sum-note').innerHTML=`${escapeHtml(STORE_NAMES[data.currentTab])} · ${count} item${count===1?'':'s'}${m.unknown>0?'<br>Uncertain items assumed taxable; EBT not assumed.':''}`;const er=data.settings.ebtBalance,he=er!==''&&er!==null,ev=num(er)-m.ebtEligible;document.getElementById('ebt-rem').textContent=he?fmt(ev):'Not set';document.getElementById('ebt-rem-box').classList.toggle('warn',he&&ev<0);const br=data.settings.tripBudget,hb=br!==''&&br!==null,bv=num(br)-m.total;document.getElementById('budget-rem').textContent=hb?fmt(bv):'Not set';document.getElementById('budget-rem-box').classList.toggle('warn',hb&&bv<0)}
+function pushUndo(label){undoSnapshot=clone(data);document.getElementById('undo-text').textContent=label;document.getElementById('undo-toast').style.display='flex';clearTimeout(undoTimeout);undoTimeout=setTimeout(()=>{document.getElementById('undo-toast').style.display='none';undoSnapshot=null},5000)}
+function performUndo(){if(!undoSnapshot)return;data=undoSnapshot;undoSnapshot=null;clearTimeout(undoTimeout);document.getElementById('undo-toast').style.display='none';saveData();document.getElementById('ebt-balance').value=data.settings.ebtBalance??'';document.getElementById('trip-budget').value=data.settings.tripBudget??'';render()}
+function requestClearCart(){if(currentCart().length)document.getElementById('clear-modal').style.display='flex'}function closeModal(id){document.getElementById(id).style.display='none'}function confirmClearCart(){pushUndo('Cart cleared');data.carts[data.currentTab]=[];saveData();render();closeModal('clear-modal')}
+function requestFinishTrip(){if(currentCart().length)document.getElementById('finish-modal').style.display='flex'}
+function confirmFinishTrip(){const m=cartMath();data.history.unshift({id:Date.now(),store:data.currentTab,date:new Date().toISOString(),total:m.total,ebtEligible:m.ebtEligible,nonEbt:m.nonEbt,unknown:m.unknown,tax:m.tax,lineCount:currentCart().length});data.history=data.history.slice(0,20);data.carts[data.currentTab]=[];saveData();render();renderHistory();closeModal('finish-modal')}
+function toggleHistory(){document.getElementById('history-card').classList.toggle('show');renderHistory()}
+function renderHistory(){const e=document.getElementById('history-list');if(!data.history.length){e.innerHTML='<div class="empty" style="padding:10px">No completed trips yet.</div>';return}e.innerHTML=data.history.slice(0,10).map(t=>`<div class="trip-row"><div class="trip-main"><span>${escapeHtml(STORE_NAMES[t.store]||'Store')}</span><span>${fmt(t.total)}</span></div><div class="trip-sub">${new Date(t.date).toLocaleDateString()} · EBT ${fmt(t.ebtEligible||0)} · Non-EBT ${fmt(t.nonEbt||0)}${t.unknown?` · Uncertain ${fmt(t.unknown)}`:''} · Tax ${fmt(t.tax||0)}</div></div>`).join('')}
+function attachSwipeHandlers(){document.querySelectorAll('.item[data-id]').forEach(el=>{const id=parseInt(el.dataset.id,10);let sx=0,dx=0,drag=false;el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;dx=0;drag=true;el.style.transition='none'},{passive:true});el.addEventListener('touchmove',e=>{if(!drag)return;dx=e.touches[0].clientX-sx;if(dx>0)dx=0;if(dx<-110)dx=-110;el.style.transform=`translateX(${dx}px)`},{passive:true});el.addEventListener('touchend',()=>{drag=false;el.style.transition='transform .15s ease';if(dx<-70)deleteItem(id);else el.style.transform='translateX(0)';dx=0})})}
+document.getElementById('in-name').addEventListener('input',e=>showSuggestions(e.target.value));document.getElementById('in-name').addEventListener('blur',()=>setTimeout(hideSuggestions,120));document.getElementById('in-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('in-price').focus()});document.getElementById('in-price').addEventListener('keydown',e=>{if(e.key==='Enter')addItem()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveData()});window.addEventListener('pagehide',saveData);init();
 </script>
 </body>
 </html>
